@@ -1,5 +1,7 @@
 # badKarma - advanced network reconnaissance toolkit #
 
+<img align="left" src="https://github.com/r3vn/badKarma/blob/master/assets/images/icon.png?raw=true">
+
 badKarma is a python3 GTK+ graphical toolkit made in order to simplifies and automate network infrastructure penetration testing.
 badKarma aim to help the tester in all the penetration testing phases (information gathering, vulnerability assessment,exploitation,post-exploitation and reporting). It allow the tester to save time by having point-and-click access to their toolkit and interacte with them through GUIs or Terminals, also every task is logged under a sqlite database in order to help the tester in the reporting phase or in a incident response scenario. 
 It is available a proxychains switch that let everything go through proxies, and last but not least, every commands can be customized before execution by disabling the "auto-execute" switch.
