@@ -1,0 +1,8 @@
+admin
+root
+mysql
+db
+test
+user
+sa
+oracle
