@@ -30,13 +30,13 @@ Extensions can be found under the "extension" directory,current available extens
  - __Browser:__ just an "open in browser" for webservers menu item, take it as an example to build your own extensions.
 
 ## Screenshots ##
-
+<p align="center">
 <img width="350" src="https://user-images.githubusercontent.com/635790/44464652-a6f1ea80-a61b-11e8-9180-126c97e8aacc.png">
 <img width="350" src="https://user-images.githubusercontent.com/635790/44464653-a6f1ea80-a61b-11e8-8bb2-dbf0d58f3720.png">
 <img width="350" src="https://user-images.githubusercontent.com/635790/44464654-a6f1ea80-a61b-11e8-8a4b-afde6d9cf2bd.png">
 <img width="350" src="https://user-images.githubusercontent.com/635790/44464654-a6f1ea80-a61b-11e8-8a4b-afde6d9cf2bd.png">
 <img width="350" src="https://user-images.githubusercontent.com/635790/44464655-a78a8100-a61b-11e8-980f-53ec8eb3da87.png">
-<img width="350" src="https://user-images.githubusercontent.com/635790/44464656-a78a8100-a61b-11e8-9975-3d6e5573a690.png">
+<img width="350" src="https://user-images.githubusercontent.com/635790/44464656-a78a8100-a61b-11e8-9975-3d6e5573a690.png"></p>
 
 ## Setup ##
 install Kali linux dependecies:
