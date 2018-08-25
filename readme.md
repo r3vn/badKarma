@@ -31,10 +31,14 @@ Extensions can be found under the "extension" directory,current available extens
 
 ## Screenshots ##
 <p align="center">
+<img src="https://user-images.githubusercontent.com/635790/44618869-604ffa80-a87e-11e8-8387-0fa8f12a0aa7.gif">
+</p>
+
+<p align="center">
 <img width="350" src="https://user-images.githubusercontent.com/635790/44464652-a6f1ea80-a61b-11e8-9180-126c97e8aacc.png">
 <img width="350" src="https://user-images.githubusercontent.com/635790/44464653-a6f1ea80-a61b-11e8-8bb2-dbf0d58f3720.png">
-<img width="350" src="https://user-images.githubusercontent.com/635790/44464654-a6f1ea80-a61b-11e8-8a4b-afde6d9cf2bd.png">
-<img width="350" src="https://user-images.githubusercontent.com/635790/44464654-a6f1ea80-a61b-11e8-8a4b-afde6d9cf2bd.png">
+<img width="350" src="https://user-images.githubusercontent.com/635790/44618508-74442e00-a877-11e8-8a6c-1b241aac9de1.png">
+<img width="350" src="https://user-images.githubusercontent.com/635790/44618566-aefa9600-a878-11e8-98c1-55d619277903.png">
 <img width="350" src="https://user-images.githubusercontent.com/635790/44464655-a78a8100-a61b-11e8-980f-53ec8eb3da87.png">
 <img width="350" src="https://user-images.githubusercontent.com/635790/44464656-a78a8100-a61b-11e8-9975-3d6e5573a690.png"></p>
 
