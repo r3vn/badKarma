@@ -82,6 +82,7 @@ class karma_ext(GObject.GObject):
 			cmd+="\n"
 
 		terminal	= Vte.Terminal()
+		terminal.set_scrollback_lines(-1)
 
 		status, pid = terminal.spawn_sync(
 			Vte.PtyFlags.DEFAULT,

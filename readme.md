@@ -53,9 +53,6 @@ install python dependecies:
 # pip3 install -r requirements.txt
 ```
 
-Also dirsearch is required by the shell extension:
- - https://github.com/maurosoria/dirsearch
-
 ## Run ##
 ```bash
 $ chmod +x badkarma.py
