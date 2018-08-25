@@ -26,6 +26,7 @@ gi.require_version('GtkSource', '3.0')
 gi.require_version('Vte', '2.91')
 
 from gi.repository import Gtk
+from gi.repository import Gdk
 from gi.repository import Vte
 from gi.repository import GtkSource
 from gi.repository import GLib
@@ -81,8 +82,14 @@ class karma_ext(GObject.GObject):
 		if auto_exec:
 			cmd+="\n"
 
+		scroller    = Gtk.ScrolledWindow()
 		terminal	= Vte.Terminal()
+
 		terminal.set_scrollback_lines(-1)
+		scroller.add(terminal)
+
+		terminal.show()
+		scroller.show()
 
 		status, pid = terminal.spawn_sync(
 			Vte.PtyFlags.DEFAULT,
@@ -95,11 +102,32 @@ class karma_ext(GObject.GObject):
 			)
 
 		# terminal.feed_child(cmd, len(cmd)) # Vte update fix
+		terminal.connect("key-press-event",self._key_press_event)
 		terminal.feed_child(cmd.encode())
 		terminal.connect("child_exited", self.task_terminated)
 
-		return terminal, pid
+		return scroller, pid
 
+	def _key_press_event(self, widget, event):
+		# Vte terminal key press event,
+		# allow Copy/Paste in the terminal
+
+		terminal = widget
+
+		keyval = event.keyval
+		keyval_name = Gdk.keyval_name(keyval)
+		state = event.state
+
+		ctrl = (state & Gdk.ModifierType.CONTROL_MASK)
+		shift = (state & Gdk.ModifierType.SHIFT_MASK)
+
+		if ctrl and shift and keyval_name == 'C':
+			# Ctrl+Shit+C - copy
+			terminal.copy_clipboard_format(Vte.Format.TEXT)
+
+		if ctrl and shift and keyval_name == 'V':
+			# Ctrl+Shit+V - paste
+			terminal.paste_clipboard()
 
 	def task_terminated(self, widget, two):
 

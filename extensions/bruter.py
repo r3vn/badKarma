@@ -25,6 +25,7 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Vte', '2.91')
 
 from gi.repository import Gtk
+from gi.repository import Gdk
 from gi.repository import GtkSource
 from gi.repository import GLib
 from gi.repository import Vte
@@ -142,6 +143,8 @@ class karma_ext(GObject.GObject):
 
 			)
 		
+		self.bruter_terminal.set_scrollback_lines(-1)
+		self.bruter_terminal.connect("key-press-event",self._key_press_event)
 		self.bruter_terminal.connect("child_exited", self.task_terminated)
 		self.bruter_terminal.hide()
 
@@ -172,6 +175,26 @@ class karma_ext(GObject.GObject):
 
 		self.emit('end_task', str(widget.get_text_range(0,0,widget.get_cursor_position()[1] + widget.get_row_count(),10)[0]))
 
+	def _key_press_event(self, widget, event):
+		# Vte terminal key press event,
+		# allow Copy/Paste in the terminal
+
+		terminal = widget
+
+		keyval = event.keyval
+		keyval_name = Gdk.keyval_name(keyval)
+		state = event.state
+
+		ctrl = (state & Gdk.ModifierType.CONTROL_MASK)
+		shift = (state & Gdk.ModifierType.SHIFT_MASK)
+
+		if ctrl and shift and keyval_name == 'C':
+			# Ctrl+Shit+C - copy
+			terminal.copy_clipboard_format(Vte.Format.TEXT)
+
+		if ctrl and shift and keyval_name == 'V':
+			# Ctrl+Shit+V - paste
+			terminal.paste_clipboard()
 
 	def _bruter_start(self, widget):
 		# start the bruite force process
