@@ -31,7 +31,7 @@ Extensions can be found under the "extension" directory,current available extens
 
 ## Screenshots ##
 <p align="center">
-<img width="720" src="https://user-images.githubusercontent.com/635790/44618869-604ffa80-a87e-11e8-8387-0fa8f12a0aa7.gif">
+<img width="710" src="https://user-images.githubusercontent.com/635790/44618869-604ffa80-a87e-11e8-8387-0fa8f12a0aa7.gif">
 </p>
 
 <p align="center">

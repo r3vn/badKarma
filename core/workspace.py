@@ -598,7 +598,6 @@ class Notesview():
 
 	def mouse_click(self, tv, event):
 		# right click on a note
-		
 		try:
 			self.rightclickmenu.destroy()
 		except: pass
@@ -608,18 +607,26 @@ class Notesview():
 			# get selected port
 			self.rightclickmenu = Gtk.Menu()
 
-			(model, pathlist) = self.notestree.get_selection().get_selected_rows()
+			(model, pathlist) = tv.get_selection().get_selected_rows()
 			for path in pathlist :
 				tree_iter = model.get_iter(path)
+				print(tree_iter)
+				
+				id = model.get_value(tree_iter,1)
+				
+				i1 = Gtk.MenuItem("delete")
+				i2 = Gtk.MenuItem("rename")
 
+				i1.connect("activate", self.delete_note, id)
+				i2.connect("activate", self.rename_note, path)
 
 				
-			i1 = Gtk.MenuItem("delete")
-			self.rightclickmenu.append(i1)
+				self.rightclickmenu.append(i1)
+				self.rightclickmenu.append(i2)
 
-			# show all
-			self.rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
-			self.rightclickmenu.show_all()
+				# show all
+				self.rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
+				self.rightclickmenu.show_all()
 
 
 	def add_note(self, widget):
@@ -630,7 +637,7 @@ class Notesview():
 			self.scrolledwindow.destroy()
 		except: pass
 
-		title, id = self.database.add_note(self.host.id, "note "+str(len(self.notes_liststore)), "")
+		title, id = self.database.add_note(self.host.id, "note "+str(len(self.notes_liststore)), "") # FIXME
 		self.notes_liststore.append([title, id])
 
 		self.scrolledwindow = Gtk.ScrolledWindow()
@@ -696,6 +703,35 @@ class Notesview():
 		text = self.note_box.get_buffer().get_text(start_iter, end_iter, True)  
 
 		self.database.save_note(id, text)
+
+	def rename_note(self, widget, cell):
+		#cell.set_property("editable", True)
+		""" todo """
+
+	def delete_note(self, widget, id):
+		# delete a note from the db
+
+		# ask for confirmation with a dialog
+		dialog = Gtk.MessageDialog(Gtk.Window(), 0, Gtk.MessageType.WARNING,
+			Gtk.ButtonsType.OK_CANCEL, "Delete note?")
+		dialog.format_secondary_text(
+			"This operation will be irreversible.")
+		response = dialog.run()
+
+		if response == Gtk.ResponseType.OK:
+			dialog.close()
+
+			(model, pathlist) = self.notestree.get_selection().get_selected_rows()
+			for path in pathlist :
+				tree_iter = model.get_iter(path)
+				self.notes_liststore.remove(tree_iter)
+
+				self.database.remove_note(id)
+				self.refresh(self.database)
+
+
+		elif response == Gtk.ResponseType.CANCEL:
+			dialog.close()
 
 
 

@@ -241,7 +241,7 @@ class DB:
 		return self.session.query(nmap_host).filter( nmap_host.id == id ).one()
 
 	def get_port(self,id):
-		return self.session.query(nmap_port).filter( nmap_port.id == id).one()
+		return self.session.query(nmap_port).filter( nmap_port.id == id ).one()
 
 	def get_service(self, id):
 		return self.session.query(nmap_port).filter( nmap_port.service == id ).all()
@@ -266,15 +266,24 @@ class DB:
 		return self.session.query(activity_log).order_by(activity_log.id.desc()).first().id
 
 	def remove_log(self,id):
-		todel = self.session.query(activity_log).filter( activity_log.id == id).one()
+		todel = self.session.query(activity_log).filter( activity_log.id == id ).one()
 		self.session.delete(todel)
 		self.session.commit()
 
 		return True
 
+	def remove_note(self, id):
+		todel = self.session.query(notes).filter( notes.id == id ).one()
+
+		self.session.delete(todel)
+		self.session.commit()
+
+		return True
+
+
 	def remove_host(self, id):
 		#print(address)
-		todel = self.session.query(nmap_host).filter( nmap_host.id == id).one()
+		todel = self.session.query(nmap_host).filter( nmap_host.id == id ).one()
 		todel_2 = self.session.query(nmap_port).filter( nmap_port.host_id == id ).all()
 
 		self.session.delete(todel)
