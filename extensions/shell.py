@@ -67,7 +67,7 @@ class karma_ext(GObject.GObject):
 		path_script = config["path_script"]
 
 		cmd = self.config[serv][ext]
-		cmd = cmd.replace("$host", rhost).replace("$port", str(rport))
+		cmd = cmd.replace("$rhost", rhost).replace("$rport", str(rport))
 		cmd = cmd.replace('$domain', config["domain"])
 		cmd = cmd.replace('$wordlists', config["path_wordlist"])
 		cmd = cmd.replace('$scripts', config["path_script"])
