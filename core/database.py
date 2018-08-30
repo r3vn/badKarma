@@ -262,6 +262,9 @@ class DB:
 		
 		return self.session.query(activity_log).filter( activity_log.id == int(id) ).one()
 
+	def get_history(self, host):
+		return self.session.query(activity_log).filter( activity_log.title.like("%"+host+"%")).all()
+
 	def get_log_id(self):
 		return self.session.query(activity_log).order_by(activity_log.id.desc()).first().id
 

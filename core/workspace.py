@@ -82,6 +82,10 @@ class Logger():
 		self.log_tree.connect("row-activated", self.on_row_activated)
 		self.log_tree.connect('size-allocate', self._scroll)
 
+		# multi selection 
+		selection = self.log_tree.get_selection()
+		selection.set_mode(Gtk.SelectionMode.MULTIPLE)
+
 		self.log_box.add(self.log_tree)
 
 	def _scroll(self, widget, event, data=None):
@@ -112,7 +116,7 @@ class Logger():
 
 		# ask for confirmation with a dialog
 		dialog = Gtk.MessageDialog(Gtk.Window(), 0, Gtk.MessageType.WARNING,
-			Gtk.ButtonsType.OK_CANCEL, "Delete log?")
+			Gtk.ButtonsType.OK_CANCEL, "Delete log(s)?")
 		dialog.format_secondary_text(
 			"This operation will be irreversible.")
 		response = dialog.run()
@@ -125,7 +129,7 @@ class Logger():
 				tree_iter = model.get_iter(path)
 				self.log_liststore.remove(tree_iter)
 
-				self.database.remove_log(log_id)
+				self.database.remove_log(model.get_value(tree_iter,0))
 				self.refresh(self.database)
 
 
@@ -358,6 +362,9 @@ class Serviceslist():
 		#self.servicestree.show()
 		self.services_box.show()
 
+		self.servicestree.props.activate_on_single_click = True
+
+
 
 	def refresh(self, db):
 		# refresh the log tree with the new database
@@ -434,6 +441,9 @@ class Hostlist():
 
 		self.hosttree.show()
 		self.host_box.show()
+
+		self.hosttree.props.activate_on_single_click = True
+
 
 
 	def refresh(self, db):
@@ -548,7 +558,6 @@ class Serviceview():
 
 			self.port_liststore.append(ports_list)
 
-
 class Notesview():
 	def __init__(self, host, database):
 		""" notes view per host """
@@ -563,13 +572,12 @@ class Notesview():
 		self.host     = host
 		
 		
-
 		# notes
 		self.notes_view = builder.get_object("notes-view")
 		self.notes_liststore = Gtk.ListStore(str, int)
 
 		self.notestree = Gtk.TreeView(model=self.notes_liststore)
-		self.notestree.activate_on_single_click = True
+		
 
 		for i, column_title in enumerate(["title"]):
 			renderer = Gtk.CellRendererText()
@@ -584,6 +592,8 @@ class Notesview():
 		self.notestree.connect("row-activated", self.on_row_activated)
 		self.add_button.connect("clicked", self.add_note)
 		self.notestree.connect("button_press_event", self.mouse_click)
+
+		self.notestree.props.activate_on_single_click = True
 
 
 	def refresh(self, database):
@@ -734,6 +744,35 @@ class Notesview():
 			dialog.close()
 
 
+class Historyview():
+	def __init__(self, host, database):
+		""" Single host's task history """
+		self.database = database
+		self.host     = host
+
+		self.history_liststore = Gtk.ListStore(int, str, str, int, str)
+		self.history_tree      = Gtk.TreeView(model=self.history_liststore)
+
+		for i, column_title in enumerate(["id","Started", "Ended", "Pid", "Task"]):
+			renderer = Gtk.CellRendererText()
+			column = Gtk.TreeViewColumn(column_title, renderer, text=i)
+
+			self.history_tree.append_column(column)
+
+		self.refresh(self.database)
+
+	def refresh(self, database):
+		""" refresh history """
+		self.history_liststore.clear()
+
+		self.database = database
+		self.history  = self.database.get_history(self.host.address)
+
+		for task in self.history:
+			self.history_liststore.append([task.id, task.start_time, task.end_time, task.pid, task.title])
+
+
+
 
 class Hostview():
 	def __init__(self, host, database):
@@ -762,18 +801,21 @@ class Hostview():
 		self.info_tcpseq	= builder.get_object("info-tcpseq")
 		self.info_uptime	= builder.get_object("info-uptime")
 
-		# scripts tab
+		# history tab
 		self.info_vendor = builder.get_object("info-vendor")
-		self.scripts_box = builder.get_object("scripts-box")
+		self.history_box = builder.get_object("history-box")
 
-		#	self.show_all()
+		self.history_view = Historyview(self.host, self.database)
+
+		self.history_box.add(self.history_view.history_tree)
+		self.history_box.show_all()
 
 		self.port_liststore = Gtk.ListStore(GdkPixbuf.Pixbuf, int, str, str, str, str, str, int)
 
 		
 		self.refresh(self.database)
 
-		#creating the treeview, making it use the filter as a model, and adding the columns
+		# creating the treeview, making it use the filter as a model, and adding the columns
 		self.treeview = Gtk.TreeView(model=self.port_liststore)
 
 
@@ -836,15 +878,18 @@ class Hostview():
 		self.info_uptime.set_text(str(host.uptime) + " seconds")
 		self.info_tcpseq.set_text(host.tcpsequence)
 
-		textbuffer = self.scripts_box.get_buffer()
+		#textbuffer = self.scripts_box.get_buffer()
 
-		scripts_box = ""
+		#scripts_box = ""
 
-		for script in literal_eval(host.scripts):
+		#for script in literal_eval(host.scripts):
 
-			scripts_box += "[+] " + script["id"] + ":\n" + script["output"] + "\n\n"
+		#	scripts_box += "[+] " + script["id"] + ":\n" + script["output"] + "\n\n"
 
-		textbuffer.set_text(scripts_box)
+		#textbuffer.set_text(scripts_box)
+
+		self.history_view.refresh(self.database)
+		
 
 
 

@@ -313,7 +313,7 @@ class Handler:
 
 		# ask for confirmation with a dialog
 		dialog = Gtk.MessageDialog(self.main.window, 0, Gtk.MessageType.WARNING,
-			Gtk.ButtonsType.OK_CANCEL, "Delete host?")
+			Gtk.ButtonsType.OK_CANCEL, "Delete host(s)?")
 		dialog.format_secondary_text(
 			"This operation will be irreversible.")
 		response = dialog.run()
