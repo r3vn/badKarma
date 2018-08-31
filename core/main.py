@@ -344,7 +344,7 @@ class Handler:
 				self.database.remove_host(oldid)
 
 			
-			self._sync()
+			#self._sync()
 
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()

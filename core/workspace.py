@@ -126,11 +126,14 @@ class Logger():
 
 			(model, pathlist) = self.log_tree.get_selection().get_selected_rows()
 			for path in pathlist :
-				tree_iter = model.get_iter(path)
-				self.log_liststore.remove(tree_iter)
 
+				
+				tree_iter = model.get_iter(path)
+
+				model.remove(tree_iter)
 				self.database.remove_log(model.get_value(tree_iter,0))
-				self.refresh(self.database)
+				
+			#self.refresh(self.database)	
 
 
 		elif response == Gtk.ResponseType.CANCEL:
@@ -598,6 +601,10 @@ class Notesview():
 
 		self.notestree.props.activate_on_single_click = True
 
+		# multi selection
+		selection = self.notestree.get_selection()
+		selection.set_mode(Gtk.SelectionMode.MULTIPLE)
+
 
 	def refresh(self, database):
 
@@ -626,19 +633,19 @@ class Notesview():
 				
 				id = model.get_value(tree_iter,1)
 				
-				i1 = Gtk.MenuItem("delete")
-				i2 = Gtk.MenuItem("rename")
+			i1 = Gtk.MenuItem("delete")
+			i2 = Gtk.MenuItem("rename")
 
-				i1.connect("activate", self.delete_note, id)
-				i2.connect("activate", self.rename_note, path)
+			i1.connect("activate", self.delete_note, tv)
+			i2.connect("activate", self.rename_note, path)
 
 				
-				self.rightclickmenu.append(i1)
-				self.rightclickmenu.append(i2)
+			self.rightclickmenu.append(i1)
+			self.rightclickmenu.append(i2)
 
-				# show all
-				self.rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
-				self.rightclickmenu.show_all()
+			# show all
+			self.rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
+			self.rightclickmenu.show_all()
 
 
 	def add_note(self, widget):
@@ -720,9 +727,8 @@ class Notesview():
 		#cell.set_property("editable", True)
 		""" todo """
 
-	def delete_note(self, widget, id):
+	def delete_note(self, widget, tv):
 		# delete a note from the db
-
 		# ask for confirmation with a dialog
 		dialog = Gtk.MessageDialog(Gtk.Window(), 0, Gtk.MessageType.WARNING,
 			Gtk.ButtonsType.OK_CANCEL, "Delete note?")
@@ -733,14 +739,21 @@ class Notesview():
 		if response == Gtk.ResponseType.OK:
 			dialog.close()
 
-			(model, pathlist) = self.notestree.get_selection().get_selected_rows()
+			(model, pathlist) = tv.get_selection().get_selected_rows()
 			for path in pathlist :
+
 				tree_iter = model.get_iter(path)
-				self.notes_liststore.remove(tree_iter)
+				oldid     = model.get_value(tree_iter,1)
 
-				self.database.remove_note(tree_iter,1)
-				self.refresh(self.database)
+				model.remove(tree_iter)
+				self.database.remove_note(oldid)
+				
 
+			try:
+				self.scrolledwindow.destroy()
+			except: pass
+
+			#self.refresh(self.database)
 
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()
