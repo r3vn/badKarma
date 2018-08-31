@@ -738,7 +738,7 @@ class Notesview():
 				tree_iter = model.get_iter(path)
 				self.notes_liststore.remove(tree_iter)
 
-				self.database.remove_note(id)
+				self.database.remove_note(tree_iter,1)
 				self.refresh(self.database)
 
 
@@ -847,7 +847,7 @@ class Hostview():
 
 		# refresh history
 		self.history_view.refresh(self.database)
-		
+
 		if history:
 			# refresh ONLY history
 			return True

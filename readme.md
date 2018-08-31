@@ -26,7 +26,7 @@ badKarma is modular, the extensions are full-interactive and they allow the test
 Extensions can be found under the "extension" directory,current available extensions are: 
  - __Shell:__ this is the main module of the toolkit since it allow the tester to execute preconfigured shell tasks. Shell commands are located under the "conf" directory.
  - __Bruter:__ as the name says, bruter is the brute-force extension. It allow the tester to send a target directly to Hydra and configure the parameters through a GUI.
- - __Screenshot:__ this extension allow the tester to take a screenshot of possibile web servers, the screenshot will be stored in the log database as base64 and can be normally shown from badKarma.
+ - __Screenshot:__ this extension allow the tester to take a screenshot of possibile web,rdp,rtsp,vnc and x11 servers, the screenshot will be stored in the log database as base64 and can be normally shown from badKarma.
  - __Browser:__ just an "open in browser" for webservers menu item, take it as an example to build your own extensions.
 
 ## Screenshots ##
