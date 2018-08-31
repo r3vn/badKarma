@@ -845,9 +845,11 @@ class Hostview():
 
 	def refresh(self, db, history = False):
 
+		# refresh history
+		self.history_view.refresh(self.database)
+		
 		if history:
-			self.history_view.refresh(self.database)
-
+			# refresh ONLY history
 			return True
 
 
