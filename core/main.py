@@ -183,28 +183,39 @@ class Handler:
 	def _controller_switch(self, widget, test, newpage):
 		""" switch from hostview to services view and vice-versa """
 		if newpage == 0:
+			# switch to host view
+			self.on_services_view = False
+			
 			try:
-				# switch to host view
-				self.on_services_view = False
 				self.main.workspace.remove(self.services_view.notebook)
-				self.main.workspace.add(self.work.notebook)
+				
+			except: 
+				self.main.workspace.remove(self.main.welcome_note)
+
+			try:
+				self.main.workspace.add(self.work.notebook)	
 
 			except:
-				# something goes probably wrong
-				self.on_services_view = False
+				# empty workspace
 				self.main.workspace.add(self.main.welcome_note)
 
 		
 		elif newpage == 1:
+			# switch to servies view
+			
+			self.on_services_view = True
+			
 			try:
-				# switch to servies view
-				self.on_services_view = True
+				
 				self.main.workspace.remove(self.work.notebook)
+			except: 
+				self.main.workspace.remove(self.main.welcome_note)
+			try:
+				
 				self.main.workspace.add(self.services_view.notebook)
 
 			except: 
-				# first switch, add welcome message
-				self.on_services_view = True
+				# empty workspace
 				self.main.workspace.add(self.main.welcome_note)
 		
 		# clear the mouse_click menu
