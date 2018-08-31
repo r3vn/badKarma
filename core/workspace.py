@@ -960,6 +960,8 @@ class Main():
 		self.services_box        = builder.get_object("services-box")
 		self.workspace           = builder.get_object("workspace-work")
 
+		self.welcome_note        = builder.get_object("welcome-note")
+
 		# connect preferences menu for quit
 		self.use_proxychains.connect('toggled', self._quit_menu)
 		self.auto_exec.connect('toggled', self._quit_menu)
@@ -971,6 +973,8 @@ class Main():
 		self.file_open.connect('clicked', self._quit_menu)
 		self.file_import.connect('clicked', self._quit_menu)
 		self.file_save_as.connect('clicked', self._quit_menu)
+
+		#self.workspace.add(self.welcome_note)
 
 	def _quit_menu(self,widget):
 		self.preferences_popover.hide()

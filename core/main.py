@@ -102,7 +102,14 @@ class Handler:
 		self.services_list.servicestree.connect("row-activated", self.services_row)	
 		self.services_list.servicestree.connect("button_press_event", self.host_click)#self.service_click)
 
+
+		# add welcome messages
+		self.main.workspace.add(self.main.welcome_note)
+		#self.main.workspace.add(self.services_view.welcome_note)
+
+		# add logger
 		self.main.main_paned.add2(self.logger.notebook)	
+
  
 		# populate window
 		self._sync()
@@ -144,7 +151,17 @@ class Handler:
 			self.scenes["services_view"][service].refresh(self.database)
 
 	def _clear_workspace(self):
-		""" remove host_view or services_view notebook """
+		""" 
+		remove host_view or services_view notebook
+		    and welcome notebook 
+		"""
+
+		try:
+			self.main.workspace.remove(self.main.welcome_note)
+		except: pass
+		try:
+			self.main.workspace.remove(self.services_view.welcome_note)
+		except: pass
 		try:
 			self.main.workspace.remove(self.services_view.notebook)
 		except: pass
@@ -156,8 +173,10 @@ class Handler:
 
 	def _filter_service(self, service):
 		""" function to replace service name """
-		service = service.replace("soap","http").replace("https","http").replace("ssl","http").replace("http-proxy","http").replace("http-alt","http").replace("ajp13","http").replace("vnc-http","http")
+		service = service.replace("soap","http").replace("https","http").replace("ssl","http").replace("http-proxy","http").replace("http-alt","http").replace("ajp13","http").replace("vnc-http","http").replace("http-mgmt","http")
 		service = service.replace("microsoft-ds","netbios-ssn")
+		service = service.replace("imaps","imap").replace("pop3s","pop3").replace("smtps","smtp").replace("pop3pw","pop3")
+		service = service.replace("psql","postgresql")
 
 		return service
 		
@@ -169,8 +188,12 @@ class Handler:
 				self.on_services_view = False
 				self.main.workspace.remove(self.services_view.notebook)
 				self.main.workspace.add(self.work.notebook)
-				self.rightclickmenu.destroy()
-			except: pass
+
+			except:
+				# something goes probably wrong
+				self.on_services_view = False
+				self.main.workspace.add(self.main.welcome_note)
+
 		
 		elif newpage == 1:
 			try:
@@ -178,8 +201,16 @@ class Handler:
 				self.on_services_view = True
 				self.main.workspace.remove(self.work.notebook)
 				self.main.workspace.add(self.services_view.notebook)
-				self.rightclickmenu.destroy()
-			except: pass
+
+			except: 
+				# first switch, add welcome message
+				self.on_services_view = True
+				self.main.workspace.add(self.main.welcome_note)
+		
+		# clear the mouse_click menu
+		try:
+			self.rightclickmenu.destroy()
+		except: pass
 
 	def _showhide_logs(self, widget):
 		""" show / hide logs notebook """
