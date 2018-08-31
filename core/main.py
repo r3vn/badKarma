@@ -110,8 +110,19 @@ class Handler:
 		# show all
 		self.main.window.show_all()
 
-	def _sync(self, reset=False):
+	def _sync(self, reset=False, history=False):
 		""" Sync UI and DB """
+
+		# Check history refresh
+		if history:
+			# this sync only the hosts history in the hostviews loaded
+			# this avoid to refresh everything and lose the hostlist/servicelist selection
+			# then return True
+
+			for host in self.scenes["hosts_view"]:
+				self.scenes["hosts_view"][host].refresh(self.database, history=True)
+
+			return True 
 		
 		# refresh everithing
 		self.host_list.refresh(self.database)
@@ -685,7 +696,10 @@ class Handler:
 			if os.path.exists(outfile):
 				# import the nmap xml and refresh the ui
 				self.database.import_nmap(outfile)
+			
 				self._sync()
+			else:
+				self._sync(history = True)
 
 		except: pass
 

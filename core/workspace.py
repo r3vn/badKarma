@@ -253,19 +253,21 @@ class Logger():
 		self.notebook.remove_page(current_tab)
 
 	def mouse_click(self, tv, event):
-		# right click on a service
+		# right click on a log
 		
 		try:
-			self.rightclickmenu.destroy()
-		except: pass
-		try:
 			if event.button == 3:
+
+				try:
+					self.rightclickmenu.destroy()
+				except: pass
 
 				# get selected port
 				self.rightclickmenu = Gtk.Menu()
 
 				(model, pathlist) = self.log_tree.get_selection().get_selected_rows()
 				for path in pathlist :
+
 					tree_iter = model.get_iter(path)
 
 					end_time = model.get_value(tree_iter,3) # selected port
@@ -290,6 +292,7 @@ class Logger():
 				# show all
 				self.rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
 				self.rightclickmenu.show_all()
+
 		except: pass
 
 
@@ -620,7 +623,6 @@ class Notesview():
 			(model, pathlist) = tv.get_selection().get_selected_rows()
 			for path in pathlist :
 				tree_iter = model.get_iter(path)
-				print(tree_iter)
 				
 				id = model.get_value(tree_iter,1)
 				
@@ -800,10 +802,15 @@ class Hostview():
 		self.info_distance  = builder.get_object("info-distance")
 		self.info_tcpseq	= builder.get_object("info-tcpseq")
 		self.info_uptime	= builder.get_object("info-uptime")
+		self.info_target    = builder.get_object("target-label")
+		self.info_image     = builder.get_object("target-image")
 
 		# history tab
 		self.info_vendor = builder.get_object("info-vendor")
 		self.history_box = builder.get_object("history-box")
+		self.scripts_box = builder.get_object("scripts-box")
+
+		self.info_target.set_text(self.host.address)
 
 		self.history_view = Historyview(self.host, self.database)
 
@@ -836,7 +843,12 @@ class Hostview():
 		self.treeview.show_all()
 		self.portlistframe.show()
 
-	def refresh(self, db):
+	def refresh(self, db, history = False):
+
+		if history:
+			self.history_view.refresh(self.database)
+
+			return True
 
 
 		ports = self.database.get_ports_by_host(self.host)
@@ -878,17 +890,17 @@ class Hostview():
 		self.info_uptime.set_text(str(host.uptime) + " seconds")
 		self.info_tcpseq.set_text(host.tcpsequence)
 
-		#textbuffer = self.scripts_box.get_buffer()
+		textbuffer = self.scripts_box.get_buffer()
 
-		#scripts_box = ""
+		scripts_box = ""
 
-		#for script in literal_eval(host.scripts):
+		for script in literal_eval(host.scripts):
 
-		#	scripts_box += "[+] " + script["id"] + ":\n" + script["output"] + "\n\n"
+			scripts_box += "[+] " + script["id"] + ":\n" + script["output"] + "\n\n"
 
-		#textbuffer.set_text(scripts_box)
+		textbuffer.set_text(scripts_box)
 
-		self.history_view.refresh(self.database)
+		
 		
 
 
