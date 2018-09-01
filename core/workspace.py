@@ -809,6 +809,7 @@ class Hostview():
 		# info-tab
 		self.info_mac		= builder.get_object("info-mac")
 		self.info_os		= builder.get_object("info-os")
+		self.info_os_short  = builder.get_object("info-os-short")
 		self.info_status	= builder.get_object("info-status")
 		self.info_address   = builder.get_object("info-address")
 		self.info_hostnames = builder.get_object("info-hostnames")
@@ -892,7 +893,9 @@ class Hostview():
 
 		# Fill info tab
 		host = self.host
-		self.info_os.set_text(str(host.os_match).split("\n")[0])
+		self.info_os.set_text(str(host.os_match))#.split("\n")[0]
+		self.info_os_short.set_text(str(host.os_match).split("\n")[0])
+		self.info_image.set_from_pixbuf(iconslib.get_icon(host.os_match,lg=True))
 
 		hostnamestring = ""
 		

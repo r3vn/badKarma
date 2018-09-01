@@ -338,7 +338,6 @@
         <property name="can_focus">True</property>
         <property name="vexpand">True</property>
         <property name="orientation">vertical</property>
-        <property name="wide_handle">True</property>
         <child>
           <object class="GtkNotebook" id="main-notebook">
             <property name="visible">True</property>

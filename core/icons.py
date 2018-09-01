@@ -9,6 +9,9 @@ from gi.repository import GdkPixbuf
 def icon(typed):
 	return GdkPixbuf.Pixbuf.new_from_file_at_scale(filename=os.path.dirname(os.path.abspath(__file__)) + "/../assets/images/"+typed+"-icon.png",width=24, height=24, preserve_aspect_ratio=True)
 
+def icon_lg(typed):
+	return GdkPixbuf.Pixbuf.new_from_file_at_scale(filename=os.path.dirname(os.path.abspath(__file__)) + "/../assets/images/"+typed+"-icon.png",width=64, height=64, preserve_aspect_ratio=True)
+
 
 # PORTS STATE ICONS
 def port_open_icon():
@@ -22,38 +25,43 @@ def port_closed_icon():
 
 
 # get os icons based on string match
-def get_icon(os):
+def get_icon(os, lg=False):
 
 	os = os.lower()
 
+	if lg:
+		icon_func = icon_lg
+	else:
+		icon_func = icon
+
 	# overwrite linux
 	if "android" in os:
-		return icon("android")
+		return icon_func("android")
 
 	if "ios" in os:
-		return icon("ios")
+		return icon_func("ios")
 
 	
 	if "linux" in os:
-		return icon("linux")
+		return icon_func("linux")
 
 	elif "windows" in os:
-		return icon("windows")
+		return icon_func("windows")
 
 	elif "solaris" in os:
-		return icon("solaris")
+		return icon_func("solaris")
 
 	elif "freebsd" in os:
-		return icon("freebsd")
+		return icon_func("freebsd")
 
 	elif "openbsd" in os:
-		return icon("openbsd")
+		return icon_func("openbsd")
 
 	elif "macos" in os:
-		return icon("macosx")
+		return icon_func("macosx")
 
 	elif "unix" in os:
-		return icon("unix")
+		return icon_func("unix")
 
 	else:
-		return icon("unknown")
+		return icon_func("unknown")

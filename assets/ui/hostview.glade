@@ -150,17 +150,47 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="target-label">
+                      <object class="GtkBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="margin_left">30</property>
-                        <property name="label" translatable="yes">Target</property>
-                        <property name="justify">center</property>
-                        <attributes>
-                          <attribute name="style" value="normal"/>
-                          <attribute name="weight" value="heavy"/>
-                          <attribute name="size" value="17700"/>
-                        </attributes>
+                        <property name="valign">center</property>
+                        <property name="margin_left">10</property>
+                        <property name="vexpand">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkLabel" id="target-label">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="margin_top">20</property>
+                            <property name="vexpand">True</property>
+                            <property name="label" translatable="yes">Target</property>
+                            <property name="justify">center</property>
+                            <attributes>
+                              <attribute name="style" value="normal"/>
+                              <attribute name="weight" value="heavy"/>
+                              <attribute name="size" value="17700"/>
+                            </attributes>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="info-os-short">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="vexpand">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -196,6 +226,7 @@
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="is_focus">True</property>
                             <property name="margin_top">10</property>
                             <property name="margin_bottom">5</property>
                             <property name="label" translatable="yes">Informations</property>
@@ -627,36 +658,6 @@
                         <property name="left_attach">1</property>
                         <property name="top_attach">1</property>
                       </packing>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>

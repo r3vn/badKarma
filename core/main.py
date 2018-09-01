@@ -140,6 +140,20 @@ class Handler:
 			# otherwise will break current running task's log
 			self.logger.refresh(self.database)
 
+			# add the welcome message
+			self.main.workspace.add(self.main.welcome_note)
+			
+			# reset the scenes
+			self.scenes["hosts_view"]	 = {}
+			self.scenes["services_view"] = {}
+
+			try:
+				self.services_view.notebook.destroy()
+			except: pass
+			try:
+				self.work.notebook.destroy()
+			except: pass
+
 		# set the db location as headerbar subtitle
 		self.main.headerbar.set_subtitle(self.database.db_loc)	
 
@@ -160,15 +174,13 @@ class Handler:
 			self.main.workspace.remove(self.main.welcome_note)
 		except: pass
 		try:
-			self.main.workspace.remove(self.services_view.welcome_note)
-		except: pass
-		try:
 			self.main.workspace.remove(self.services_view.notebook)
 		except: pass
 		try:
 			self.main.workspace.remove(self.work.notebook)
 		except: pass
 
+		
 		return True
 
 	def _filter_service(self, service):
@@ -188,13 +200,12 @@ class Handler:
 			
 			try:
 				self.main.workspace.remove(self.services_view.notebook)
-				
-			except: 
+			except:  
+				# empty workspace
 				self.main.workspace.remove(self.main.welcome_note)
 
 			try:
 				self.main.workspace.add(self.work.notebook)	
-
 			except:
 				# empty workspace
 				self.main.workspace.add(self.main.welcome_note)
@@ -206,14 +217,13 @@ class Handler:
 			self.on_services_view = True
 			
 			try:
-				
 				self.main.workspace.remove(self.work.notebook)
 			except: 
+				# empty workspace
 				self.main.workspace.remove(self.main.welcome_note)
-			try:
-				
-				self.main.workspace.add(self.services_view.notebook)
 
+			try:
+				self.main.workspace.add(self.services_view.notebook)
 			except: 
 				# empty workspace
 				self.main.workspace.add(self.main.welcome_note)
