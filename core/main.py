@@ -778,9 +778,9 @@ class Handler:
 				"service"       : service, 
 				"domain"        : self._selected_opt["domain"],
 				"outfile"       : output_file,
-				"path_config"   : os.path.dirname(os.path.abspath(__file__)) + "/../conf/",
-				"path_script"   : os.path.dirname(os.path.abspath(__file__)) + "/../scripts/",
-				"path_wordlist" : os.path.dirname(os.path.abspath(__file__)) + "/../wordlists/"
+				"path_config"   : os.path.abspath(str(os.getcwd())+"/../conf"),
+				"path_script"   : os.path.abspath(str(os.getcwd())+"/../scripts"),
+				"path_wordlist" : os.path.abspath(str(os.getcwd())+"/../wordlists")
 
 				}
 
