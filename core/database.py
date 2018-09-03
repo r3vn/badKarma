@@ -353,7 +353,7 @@ class DB:
 
 	def remove_note(self, id):
 		todel = self.session.query(notes).filter( notes.id == id ).one()
-		print(todel)
+
 		self.session.delete(todel)
 		self.session.commit()
 

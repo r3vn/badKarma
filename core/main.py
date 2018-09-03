@@ -379,15 +379,11 @@ class Handler:
 
 	def identify_scan(self, file) :
 		""" identify scanner to import the results """
-		print (file)
 
 		with open(file) as myfile:
 			head = "".join(myfile.readlines()[0:5]).replace('\n','')
 
-		print(head.lower())
-
 		if "masscan" in head.lower():
-			print("masscan")
 			return "masscan"
 
 		elif "nmap" in head.lower():
