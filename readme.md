@@ -16,7 +16,7 @@ The database by default is located inside the "/tmp" directory, this means that 
 It contains all the information gained during the activity, real-time updated, it is used like a session file, and it can be exported or/and imported.
 
 ### Targets ###
-It is possible to add target and scan them with nmap or import an nmap XML report, also some defaults scan profiles are already available as well. 
+It is possible to add target and scan them with nmap and masscan or import XML reports, also some defaults scan profiles are already available as well. 
 
 By defaults all the nmap output are stored inside the "/tmp" directory , then the output is imported in the sqlite database and deleted.
 

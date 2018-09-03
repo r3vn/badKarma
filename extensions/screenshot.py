@@ -65,7 +65,7 @@ class karma_ext(GObject.GObject):
 			# HTTP screenshot
 			url = host+":"+port
 
-			cmd += "phantomjs --ignore-ssl-errors=true " + config["path_script"]+"http_screenshot.js "
+			cmd += "phantomjs --ignore-ssl-errors=true " + config["path_script"]+"/http_screenshot.js "
 
 			if "443" in port:
 				cmd += "https://"+url
@@ -75,19 +75,19 @@ class karma_ext(GObject.GObject):
 
 		elif config["service"] == "ms-wbt-server":
 			# RDP screenshot
-			cmd += "bash " + config["path_script"]+"rdp_screenshot.sh " + config["rhost"] + " " + config["rport"]
+			cmd += "bash " + config["path_script"]+"/rdp_screenshot.sh " + config["rhost"] + " " + config["rport"]
 				
 		elif config["service"] == "X11":
 			# X11 screenshot
-			cmd += "bash " + config["path_script"]+"x11_screenshot.sh "+ config["rhost"] + " 0"
+			cmd += "bash " + config["path_script"]+"/x11_screenshot.sh "+ config["rhost"] + " 0"
 
 		elif config["service"] == "vnc":
 			# VNC screenshot
-			cmd += "python3 " + config["path_script"]+"vnc_screenshot.py " + config["rhost"] +" "+ config["rport"] 
+			cmd += "python3 " + config["path_script"]+"/vnc_screenshot.py " + config["rhost"] +" "+ config["rport"] 
 
 		elif config["service"] == "rtsp":
 			# RTSP screenshot
-			cmd += "bash " + config["path_script"]+"rtsp_screenshot.sh " + config["rhost"] + " " + config["rport"]
+			cmd += "bash " + config["path_script"]+"/rtsp_screenshot.sh " + config["rhost"] + " " + config["rport"]
 
 
 		self.p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)

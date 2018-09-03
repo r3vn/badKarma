@@ -15,7 +15,7 @@ def add_filter_database(dialog):
   
 def add_filter_nmap(dialog):
 	filter_text = Gtk.FileFilter()
-	filter_text.set_name("nmap XML files")
+	filter_text.set_name("nmap/masscan XML files")
 	filter_text.add_mime_type("text/xml")
 	dialog.add_filter(filter_text)
 

@@ -23,6 +23,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import update
 
 from libnmap.parser import NmapParser
+from xml.etree import ElementTree
 
 Base = declarative_base()
 
@@ -91,8 +92,83 @@ class DB:
 		self.db_loc = db_loc
 		self.session = DBSession()
 
+
+	def import_masscan(self, xml):
+		""" import masscan xml output """
+
+		dom = ElementTree.parse(xml)
+		scan = dom.findall('host')
+		out = {}
+		add_host = ""
+
+		for s in scan:
+			addr = s.getchildren()[0].items()[0][1]
+			port = s.getchildren()[1].getchildren()[0].items()[1][1]
+
+			try:
+				service = s.getchildren()[1].getchildren()[0].getchildren()[1].items()[0][1]
+			except: 
+				service = ""
+			try:
+				banner = s.getchildren()[1].getchildren()[0].getchildren()[1].items()[1][1]
+			except: 
+				banner = ""
+			try:
+				port_state =  s.getchildren()[1].getchildren()[0].getchildren()[0].items()[0][1]
+			except:
+				port_state = ""
+
+			try:
+				proto = s.getchildren()[1].getchildren()[0].items()[0][1]
+			except: 
+				proto= ""
+
+
+			if addr in out:
+				if service != "title" and service != "":
+
+					if self.port_exist(add_host.id, port, proto):
+						# update the existing port
+						add_port = self.session.query(nmap_port).filter( nmap_port.host_id == add_host.id, nmap_port.port == port, nmap_port.protocol == proto ).one()
+
+						if len(service) > 0:
+							add_port.service = service
+						#if len(service.servicefp) > 0:
+						#	add_port.fingerprint = str(service.servicefp)
+
+						if len(port_state) > 0:
+							add_port.state = port_state
+						if len(banner) > 0:
+							add_port.banner = banner
+
+					else:
+						# add the new port
+						add_port = nmap_port(port=port, protocol=proto, service=service, fingerprint="", state=port_state, banner=banner, host = out[addr])
+
+						# commit to db
+						self.session.add(add_port)
+
+			else:
+				if self.host_exist(addr):
+
+					add_host = self.session.query(nmap_host).filter( nmap_host.address == addr ).one()
+
+				else:
+					# add the host to the db
+					add_host = nmap_host(address=addr,scripts="", hostname="", os_match="", os_accuracy="", ipv4=addr, ipv6="", mac="", status="up", tcpsequence="", vendor="", uptime="", lastboot="", distance="")
+					
+					# commit to db
+					self.session.add(add_host)
+
+				out[addr] = add_host
+
+			self.session.commit()
+			
+
+
 	def import_nmap(self, xml):
-		
+		""" import an nmap xml output """
+
 		report = NmapParser.parse_fromfile(xml)
 
 		for host in report.hosts:

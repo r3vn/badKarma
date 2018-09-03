@@ -912,13 +912,14 @@ class Hostview():
 
 		scripts_box = ""
 
-		for script in literal_eval(host.scripts):
+		try:
+			for script in literal_eval(host.scripts):
 
-			scripts_box += "[+] " + script["id"] + ":\n" + script["output"] + "\n\n"
+				scripts_box += "[+] " + script["id"] + ":\n" + script["output"] + "\n\n"
 
-		textbuffer.set_text(scripts_box)
+			textbuffer.set_text(scripts_box)
 
-		
+		except: pass
 		
 
 

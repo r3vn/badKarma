@@ -44,7 +44,7 @@
         </child>
         <child>
           <object class="GtkButton" id="file_import">
-            <property name="label" translatable="yes">Import nmap XML</property>
+            <property name="label" translatable="yes">Import scan</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>

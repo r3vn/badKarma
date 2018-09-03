@@ -185,7 +185,8 @@ class Handler:
 
 	def _filter_service(self, service):
 		""" function to replace service name """
-		service = service.replace("soap","http").replace("https","http").replace("ssl","http").replace("http-proxy","http").replace("http-alt","http").replace("ajp13","http").replace("vnc-http","http").replace("http-mgmt","http")
+		service = service.lower()
+		service = service.replace("soap","http").replace("https","http").replace("ssl","http").replace("http-proxy","http").replace("http-alt","http").replace("ajp13","http").replace("vnc-http","http").replace("http-mgmt","http").replace("x509","http")
 		service = service.replace("microsoft-ds","netbios-ssn")
 		service = service.replace("imaps","imap").replace("pop3s","pop3").replace("smtps","smtp").replace("pop3pw","pop3")
 		service = service.replace("psql","postgresql")
@@ -358,17 +359,41 @@ class Handler:
 		response = dialog.run()
 		if response == Gtk.ResponseType.OK:
 			file_selected = dialog.get_filename()
-			try:
-				self.database.import_nmap(file_selected)
-			except Exception as e:
-				print(e) 
 
+			try:
+				if self.identify_scan(file_selected) == "nmap":
+					self.database.import_nmap(file_selected)
+
+				elif self.identify_scan(file_selected) == "masscan":
+					self.database.import_masscan(file_selected)
+
+			except Exception as e: 
+				print (e)
 			
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.destroy()
 
 		dialog.destroy()
 		self._sync()
+
+
+	def identify_scan(self, file) :
+		""" identify scanner to import the results """
+		print (file)
+
+		with open(file) as myfile:
+			head = "".join(myfile.readlines()[0:5]).replace('\n','')
+
+		print(head.lower())
+
+		if "masscan" in head.lower():
+			print("masscan")
+			return "masscan"
+
+		elif "nmap" in head.lower():
+			return "nmap"
+
+
 
 
 	def _delete_host(self, widget):
@@ -778,9 +803,9 @@ class Handler:
 				"service"       : service, 
 				"domain"        : self._selected_opt["domain"],
 				"outfile"       : output_file,
-				"path_config"   : os.path.abspath(str(os.getcwd())+"/../conf"),
-				"path_script"   : os.path.abspath(str(os.getcwd())+"/../scripts"),
-				"path_wordlist" : os.path.abspath(str(os.getcwd())+"/../wordlists")
+				"path_config"   : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../conf"),
+				"path_script"   : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../scripts"),
+				"path_wordlist" : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../wordlists")
 
 				}
 
