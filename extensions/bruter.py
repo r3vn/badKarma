@@ -127,8 +127,8 @@ class karma_ext(GObject.GObject):
 		self.bruter_service.add(vbox)
 
 		# bruter wordlists
-		self.bruter_user_wl_path.set_text(os.path.dirname(os.path.abspath(__file__)) + "/../wordlists/users.txt")
-		self.bruter_pass_wl_path.set_text(os.path.dirname(os.path.abspath(__file__)) + "/../wordlists/pass.txt")
+		self.bruter_user_wl_path.set_text(config["path_wordlist"] + "/" + "users.txt")
+		self.bruter_pass_wl_path.set_text(config["path_wordlist"] + "/" + "pass.txt")
 
 		self.bruter_box.show_all()
 

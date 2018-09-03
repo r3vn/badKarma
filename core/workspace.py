@@ -128,13 +128,10 @@ class Logger():
 			for path in pathlist :
 
 				
-				tree_iter = model.get_iter(path)
+				tree_iter = model.get_iter(path)	
+				self.database.remove_log(model.get_value(tree_iter,0))
 
 				model.remove(tree_iter)
-				self.database.remove_log(model.get_value(tree_iter,0))
-				
-			#self.refresh(self.database)	
-
 
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()
