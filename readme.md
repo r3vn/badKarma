@@ -2,7 +2,7 @@
 
 <img align="left" src="https://github.com/r3vn/badKarma/blob/master/assets/images/icon.png?raw=true">
 
-badKarma is a python3 GTK+ toolkit that aim to assist penetrations testers during all the network infrastructure penetration testing activity phases.
+badKarma is a python3 GTK+ toolkit that aim to assist penetration testers during all the network infrastructure penetration testing activity phases.
 It allow testers to save time by having point-and-click access to their toolkits, launch them against single or multiple targets and interacte with them through semplified GUIs or Terminals.
 
 Every task's output is logged under a session file in order to help during reporting phase or in a possible incident response scenario. 
@@ -14,7 +14,7 @@ badKarma is licensed under GNU GPL version 3.
 The Session file is just a sqlite database, it contains all the information gained during the activity, real-time updated it can be exported or/and imported from badKarma's GUI.
 By default the database is located inside the "/tmp" directory, this means that you have to save it in a different location before rebooting your computer. 
 
-Inside the database there are three tables: hosts, ports, activity_log and notes.
+Inside the database there are four tables: hosts, ports, activity_log and notes.
 
 ### Targets ###
 It is possible to add targets and scan them with nmap and/or masscan from the GUI, some defaults scan profiles are already available as well. 
