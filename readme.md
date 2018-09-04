@@ -4,6 +4,7 @@
 
 badKarma is a python3 GTK+ toolkit that aim to assist penetration testers during all the network infrastructure penetration testing activity phases.
 It allow testers to save time by having point-and-click access to their toolkits, launch them against single or multiple targets and interacte with them through semplified GUIs or Terminals.
+badKarma came with a default collection of scripts, wordlists and shell commands that can be customized at any time.
 
 Every task's output is logged under a session file in order to help during reporting phase or in a possible incident response scenario. 
 It is also available a proxychains switch that let everything go through proxies, and last but not least, every command can be adjusted before the execution by disabling the "auto-execute" checkbox.

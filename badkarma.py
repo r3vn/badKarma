@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # badKarma - advanced network reconnaissance toolkit
 #
-# Copyright (C) 2018 <Giuseppe `r3v` Corti>
+# Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # badKarma - advanced network reconnaissance toolkit
 #
-# Copyright (C) 2018 <Giuseppe `r3v` Corti>
+# Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -392,7 +392,7 @@ class Handler:
 
 
 
-	def _delete_host(self, widget):
+	def _delete_host(self, widget, hosts):
 		""" Delete host from database """
 
 		# ask for confirmation with a dialog
@@ -405,20 +405,16 @@ class Handler:
 		if response == Gtk.ResponseType.OK:
 			dialog.close()
 
-			(model, pathlist) = self.host_list.hosttree.get_selection().get_selected_rows()
-			for path in pathlist :
+			for host in hosts:
 
-				tree_iter = model.get_iter(path)
-				oldid = model.get_value(tree_iter,4)
-				#print(path)
-				self.host_list.host_liststore.remove(tree_iter)
+				self.database.remove_host(host.id)
+				model = self.host_list.hosttree.get_model()
 
+				for row in model:
+					if row[4] == host.id:
+						self.host_list.host_liststore.remove(row.iter)
 
-				self.database.remove_host(oldid)
-
-			
-			#self._sync()
-
+		
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()
 
@@ -516,6 +512,7 @@ class Handler:
 			# get selected host
 			try:
 				targets = []
+
 				if self.on_services_view:
 					(model, pathlist) = self.services_list.servicestree.get_selection().get_selected_rows()
 				else:
@@ -555,7 +552,7 @@ class Handler:
 					i4.show()
 
 					self.rightclickmenu.append(i4)
-					i4.connect("activate", self._delete_host)
+					i4.connect("activate", self._delete_host, targets)
 
 					extra_name = "hostlist"
 

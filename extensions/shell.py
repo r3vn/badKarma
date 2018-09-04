@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # badKarma - advanced network reconnaissance toolkit
 #
-# Copyright (C) 2018 <Giuseppe `r3v` Corti>
+# Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ class karma_ext(GObject.GObject):
 		GObject.GObject.__init__(self)
 
 		self.config = configparser.ConfigParser()
-		self.config.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/shell.cfg")
+		self.config.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/shell.conf")
 
 		self.name = "shell"
 		self.log = True
@@ -64,7 +64,7 @@ class karma_ext(GObject.GObject):
 		rport        = config["rport"]
 		output_file  = config["outfile"]
 		path_config  = config["path_config"]
-		path_script = config["path_script"]
+		path_script  = config["path_script"]
 
 		cmd = self.config[serv][ext]
 		cmd = cmd.replace("$rhost", rhost).replace("$rport", str(rport))

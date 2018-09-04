@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # badKarma - advanced network reconnaissance toolkit
 #
-# Copyright (C) 2018 <Giuseppe `r3v` Corti>
+# Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ class Logger():
 	
 		return True
 
-	def delete_log(self, widget, log_id):
+	def delete_log(self, widget, logs_selected):
 		""" delete a log from the database """
 
 		# ask for confirmation with a dialog
@@ -124,14 +124,16 @@ class Logger():
 		if response == Gtk.ResponseType.OK:
 			dialog.close()
 
-			(model, pathlist) = self.log_tree.get_selection().get_selected_rows()
-			for path in pathlist :
+			for log_id in logs_selected:
 
-				
-				tree_iter = model.get_iter(path)	
-				self.database.remove_log(model.get_value(tree_iter,0))
+				self.database.remove_log(log_id)
 
-				model.remove(tree_iter)
+				model = self.log_tree.get_model()
+
+				for row in model:
+					if row[0] == log_id:
+						self.log_liststore.remove(row.iter)
+
 
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()
@@ -265,6 +267,8 @@ class Logger():
 				# get selected port
 				self.rightclickmenu = Gtk.Menu()
 
+				logs_selected = []
+
 				(model, pathlist) = self.log_tree.get_selection().get_selected_rows()
 				for path in pathlist :
 
@@ -273,6 +277,8 @@ class Logger():
 					end_time = model.get_value(tree_iter,3) # selected port
 					pid = model.get_value(tree_iter,4) # selected service
 					log_id = model.get_value(tree_iter,0)
+
+					logs_selected.append(log_id)
 
 				if len(end_time) < 3:
 					
@@ -287,7 +293,7 @@ class Logger():
 
 					i2 = Gtk.MenuItem("delete")
 					self.rightclickmenu.append(i2)
-					i2.connect("activate", self.delete_log, log_id)
+					i2.connect("activate", self.delete_log, logs_selected)
 			
 				# show all
 				self.rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
@@ -624,16 +630,20 @@ class Notesview():
 			# get selected port
 			self.rightclickmenu = Gtk.Menu()
 
+			note_selected = []
+
 			(model, pathlist) = tv.get_selection().get_selected_rows()
 			for path in pathlist :
 				tree_iter = model.get_iter(path)
 				
-				id = model.get_value(tree_iter,1)
+				idz = model.get_value(tree_iter,1)
+
+				note_selected.append(idz)
 				
 			i1 = Gtk.MenuItem("delete")
 			i2 = Gtk.MenuItem("rename")
 
-			i1.connect("activate", self.delete_note, tv)
+			i1.connect("activate", self.delete_note, note_selected)
 			i2.connect("activate", self.rename_note, path)
 
 				
@@ -724,7 +734,7 @@ class Notesview():
 		#cell.set_property("editable", True)
 		""" todo """
 
-	def delete_note(self, widget, tv):
+	def delete_note(self, widget, note_selected):
 		# delete a note from the db
 		# ask for confirmation with a dialog
 		dialog = Gtk.MessageDialog(Gtk.Window(), 0, Gtk.MessageType.WARNING,
@@ -736,21 +746,14 @@ class Notesview():
 		if response == Gtk.ResponseType.OK:
 			dialog.close()
 
-			(model, pathlist) = tv.get_selection().get_selected_rows()
-			for path in pathlist :
-
-				tree_iter = model.get_iter(path)
-				oldid     = model.get_value(tree_iter,1)
-
-				model.remove(tree_iter)
-				self.database.remove_note(oldid)
-				
+			for note in note_selected:
+				self.database.remove_note(note)
 
 			try:
 				self.scrolledwindow.destroy()
 			except: pass
 
-			#self.refresh(self.database)
+			self.refresh(self.database)
 
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()

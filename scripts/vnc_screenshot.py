@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # 
 #  Gtk Vnc screenshot script
-#  Author: BadKarma - Giuseppe `r3v` Corti
+#  Author: BadKarma - Giuseppe `r3vn` Corti
 
 import base64
 import gi

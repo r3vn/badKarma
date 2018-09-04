@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # badKarma - advanced network reconnaissance toolkit
 #
-# Copyright (C) 2018 <Giuseppe `r3v` Corti>
+# Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 import os
 import gi
 import signal
+import configparser
 
 gi.require_version('GtkSource', '3.0') 
 gi.require_version('Gtk', '3.0')
@@ -40,6 +41,7 @@ class karma_ext(GObject.GObject):
 	def __init__(self):
 		""" bruter integrated extension """
 		GObject.GObject.__init__(self)
+
 		self.name = "bruter"
 		self.log = True
 		self.menu = { "service" : ["all"], "label" : "Send to Bruter" }
@@ -64,10 +66,23 @@ class karma_ext(GObject.GObject):
 		return scrolledwindow
 
 	def task(self, config):
+
+		serv          = config["service"]
+		self.proxy    = config["proxychains"]
+		auto_exec     = config["autoexec"]
+		rhost         = config["rhost"]
+		rport         = config["rport"]
+		output_file   = config["outfile"]
+		path_config   = config["path_config"]
+		path_wordlist = config["path_wordlist"]
+		path_script   = config["path_script"]
+
+		config_file = configparser.ConfigParser()
+		config_file.read(config["path_config"] + "/bruter.conf")
+
+
 		builder	 = Gtk.Builder() # glade
 		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/bruter.glade")
-
-		self.proxy = config["proxychains"]
 
 		self.running = False
 		self.bruter_box = builder.get_object("bruter-box")
@@ -127,8 +142,11 @@ class karma_ext(GObject.GObject):
 		self.bruter_service.add(vbox)
 
 		# bruter wordlists
-		self.bruter_user_wl_path.set_text(config["path_wordlist"] + "/" + "users.txt")
-		self.bruter_pass_wl_path.set_text(config["path_wordlist"] + "/" + "pass.txt")
+		default_user_wordlist = config_file["default"]["user_wordlist"].replace("$wordlists", path_wordlist)
+		defautl_pass_wordlist = config_file["default"]["pass_wordlist"].replace("$wordlists", path_wordlist)
+
+		self.bruter_user_wl_path.set_text(default_user_wordlist)
+		self.bruter_pass_wl_path.set_text(defautl_pass_wordlist)
 
 		self.bruter_box.show_all()
 
@@ -148,8 +166,18 @@ class karma_ext(GObject.GObject):
 		self.bruter_terminal.connect("child_exited", self.task_terminated)
 		self.bruter_terminal.hide()
 
-		self.bruter_host.set_text(config["rhost"])
-		self.bruter_port.set_text(config["rport"])
+		self.bruter_host.set_text(rhost)
+		self.bruter_port.set_text(rport)
+
+		# set default values
+		self.bruter_blank_pass.set_active(config_file.getboolean("default", "blank_password"))
+		self.bruter_login_as_pass.set_active(config_file.getboolean("default", "try_login_as_password"))
+		self.bruter_use_ssl.set_active(config_file.getboolean("default", "use_ssl"))
+		self.bruter_exit_on_first.set_active(config_file.getboolean("default", "exit_on_first_good"))
+		self.bruter_user_checkbox.set_active(config_file.getboolean("default", "brute_force_user"))
+
+		self.bruter_threads.set_text(config_file["default"]["threads"])
+		self.bruter_user_box.set_text(config_file["default"]["user"])
 
 		service_model = self.bruter_service_combo.get_model()
 
@@ -200,7 +228,7 @@ class karma_ext(GObject.GObject):
 		# start the bruite force process
 		if self.bruter_start.get_label() == "start":
 
-			cmd = "hydra " #-l root -P /usr/share/wordlists/dnsmap.txt 127.0.0.1 ssh"]
+			cmd = "hydra -t "+self.bruter_threads.get_text()+" " #-l root -P /usr/share/wordlists/dnsmap.txt 127.0.0.1 ssh"]
 
 
 			if self.bruter_reversed.get_active() or self.bruter_blank_pass.get_active()  or self.bruter_login_as_pass.get_active() :
