@@ -17,14 +17,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import signal
+import argparse
 import gi
 gi.require_version('Gtk', '3.0')
 
 from gi.repository import Gtk
 from core.main import Handler
+from core.database import DB
 
 if __name__ == "__main__":
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--session', help='Open a session file')
+	args = parser.parse_args()
+
+	if args.session:
+		database = DB(db_loc=args.session)
+	else:
+		database = DB()
 	
 	signal.signal(signal.SIGINT, signal.SIG_DFL)
-	Handler()
+	Handler(database)
 	Gtk.main()

@@ -185,21 +185,24 @@ class Logger():
 		return True
 
 	def on_row_activated(self, listbox, cell, listboxrow):
-		model = self.log_tree.get_model()
 
-		for t in model:
-			
-			if t[8] == int(str(cell)):
-				row = t
-				log_id = row[0]
-				log_name = row[5]
-		
+		(model, pathlist) = self.log_tree.get_selection().get_selected_rows()
+		for path in pathlist :
 
-		log = self.database.get_logs(str(log_id))
+			tree_iter = model.get_iter(path)
+			log_id   = model.get_value(tree_iter,0)
 
-		if log_name == log.title:
+			self.open_log(log_id)		
+
+	
+	def open_log(self, log_id):
+
+		try:
+
+			log = self.database.get_logs(str(log_id))
 
 			extension = self.extensions.get_extra_by_name(log.extension)
+
 			scrolledwindow = extension.get_log(log.output)
 
 			# generate and fill the toolbox
@@ -221,7 +224,7 @@ class Logger():
 
 			export_button.connect("clicked", self.export_log, log.id)
 			delete_button.connect("clicked", self.delete_log, log.id)
-
+		
 			box = Gtk.Box()
 			box.pack_start(scrolledwindow, True, True, 0)
 
@@ -245,9 +248,10 @@ class Logger():
 			box.show()
 			toolbox.show_all()
 			box_label.show_all()
-			
+				
 			scrolledwindow.show()
 
+		except: pass
 
 	def close_log_tab(self, btn, widget):
 		""" close a log notebook tab button's event """

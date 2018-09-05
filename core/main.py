@@ -35,7 +35,7 @@ from core.database import DB
 import core.file_filters as file_filters
 
 class Handler:
-	def __init__(self):
+	def __init__(self, database):
 		""" badkarma handler class """
 
 		# initialization
@@ -54,7 +54,7 @@ class Handler:
 								"service" : ""
 							} 
 
-		self.database    = DB()
+		self.database    = database
 		self.extensions  = Extensions() # extension engine
 
 		self.on_services_view = False
@@ -453,6 +453,17 @@ class Handler:
 		self.services_view.treeview.connect("button_press_event", self.mouse_click)
 
 
+	def _history_activated(self, listbox, cell, listboxrow):
+
+		(model, pathlist) = self.work.history_view.history_tree.get_selection().get_selected_rows()
+		for path in pathlist :
+
+			tree_iter = model.get_iter(path)
+			log_id   = model.get_value(tree_iter,0)
+
+			self.logger.open_log(log_id)	
+
+
 
 	def on_row_activated(self, listbox, cell, listboxrow):
 		""" Generate the treeView for the ports """
@@ -473,6 +484,10 @@ class Handler:
 				# generate the scene
 				db_host = self.database.get_host(host_id)
 				self.work = Hostview(db_host, self.database)
+
+				# connect the history view to click event
+				self.work.history_view.history_tree.connect("row-activated", self._history_activated)
+
 				self.scenes["hosts_view"][str(host_id)] = self.work
 
 		# add the scene
