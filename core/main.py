@@ -21,6 +21,7 @@ import sys
 import shutil
 import gi
 import random
+import json
 import string
 
 gi.require_version('Gtk', '3.0')
@@ -367,6 +368,9 @@ class Handler:
 				elif self.identify_scan(file_selected) == "masscan":
 					self.database.import_masscan(file_selected)
 
+				elif self.identify_scan(file_selected) == "smap":
+					self.database.import_shodan(file_selected)
+
 			except Exception as e: 
 				print (e)
 			
@@ -388,6 +392,14 @@ class Handler:
 
 		elif "nmap" in head.lower():
 			return "nmap"
+
+		else:
+			try:
+				with open(file) as f:
+					testfile = json.load(f)
+					return "smap"
+			except:
+				pass
 
 
 
@@ -779,14 +791,22 @@ class Handler:
 			outfile = self.outfiles[id]
 
 			if os.path.exists(outfile):
-				# import the nmap xml and refresh the ui
-				self.database.import_nmap(outfile)
+				if self.identify_scan(outfile) == "nmap":
+					# import the nmap xml and refresh the ui
+					self.database.import_nmap(outfile)
+
+				elif self.identify_scan(outfile) == "masscan":
+					self.database.import_masscan(outfile)
+
+				elif self.identify_scan(outfile) == "smap":
+					self.database.import_shodan(outfile)
 			
 				self._sync()
 			else:
 				self._sync(history = True)
 
-		except: pass
+		except Exception as e: 
+			print(e)
 
 		
 

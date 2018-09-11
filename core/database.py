@@ -25,6 +25,8 @@ from sqlalchemy import update
 from libnmap.parser import NmapParser
 from xml.etree import ElementTree
 
+import json
+
 Base = declarative_base()
 
 class nmap_host(Base):
@@ -45,7 +47,6 @@ class nmap_host(Base):
 	lastboot      = Column(String(100))
 	distance      = Column(Integer)
 	scripts       = Column(Text)
-	#notes         = Column(Text)
 
 class nmap_port(Base):
 	__tablename__ = "nmap_port"
@@ -91,6 +92,98 @@ class DB:
 
 		self.db_loc = db_loc
 		self.session = DBSession()
+
+		# nmap well known services file location
+		self.nmap_service_loc = "/usr/share/nmap/nmap-services"
+
+
+	def _find_nmap_service(self, port, trasport):
+		""" search inside nmap well known services file"""
+
+		with open(self.nmap_service_loc,'r') as f:
+			for line in f.readlines():
+				if str(port)+"/"+trasport in line:
+
+					return line.split()[0]
+
+
+
+	def import_shodan(self, json_file):
+		""" import smap.py json output """
+
+		file = open(json_file,'r')
+		sp_out = file.read()
+		file.close()
+
+		smap_out = json.loads(sp_out)
+
+		for host in smap_out:
+			# get the os match
+
+			if smap_out[host]["os"]:
+				match = smap_out[host]["os"]
+			else:
+				match = ""
+
+			# get the first hostname
+			try:
+				hostname = smap_out[host]["hostnames"][0]
+			except:
+				hostname = ""
+
+			# check if the host is already in the db
+			if self.host_exist(host):
+				# update
+				add_host = self.session.query(nmap_host).filter( nmap_host.address == host ).one()
+				
+				# update values only if there's more informations
+
+				if len(hostname) > 0:
+					add_host.hostname = hostname
+				if len(match) > 0:
+					add_host.os_match = match
+				if len(host.status) > 0:
+					add_host.status = "up"
+
+
+			else:
+				# add the host to the db
+				add_host = nmap_host(address=host,scripts="", hostname=hostname, os_match=match, os_accuracy='', ipv4='', ipv6='', mac='', status="up", tcpsequence="", vendor="", uptime="", lastboot="", distance="")
+			
+			# commit to db
+			self.session.add(add_host)
+			self.session.commit()
+
+			i = 0
+
+
+			for port in smap_out[host]["ports"]:
+
+				service = self._find_nmap_service(port,smap_out[host]["data"][i]["transport"])
+
+				if self.port_exist(add_host.id, port, smap_out[host]["data"][i]["transport"]):
+					# update the existing port
+					add_port = self.session.query(nmap_port).filter( nmap_port.host_id == add_host.id, nmap_port.port == port, nmap_port.protocol == smap_out[host]["data"][i]["transport"] ).one()
+
+					if len(service.service) > 0:
+						add_port.service = service
+
+					if len(service.state) > 0:
+						add_port.state = "open"
+
+
+				else:
+					# add the new port
+					add_port = nmap_port(port=port, protocol=smap_out[host]["data"][i]["transport"], service=service, fingerprint="", state="open", banner="", host = add_host)
+
+				# commit to db
+				self.session.add(add_port)
+
+				i += 1
+
+		self.session.commit()
+
+
 
 
 	def import_masscan(self, xml):
