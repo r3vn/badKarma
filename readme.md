@@ -1,4 +1,7 @@
 # badKarma - advanced network reconnaissance toolkit #
+[![Python 3](https://img.shields.io/badge/python-3-green.svg)](https://www.python.org/) 
+[![License](https://img.shields.io/badge/license-GPLv3-red.svg)](https://github.com/r3vn/badKarma/blob/master/license.md)
+[![Twitter](https://img.shields.io/badge/twitter-@r3vnn-blue.svg)](https://twitter.com/r3vnn)
 
 <img align="left" src="https://github.com/r3vn/badKarma/blob/master/assets/images/icon.png?raw=true">
 

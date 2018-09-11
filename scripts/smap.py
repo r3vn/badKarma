@@ -22,8 +22,66 @@ import configparser
 import ipaddress
 import os
 import json
+import threading
 
 from shodan import Shodan
+
+sout = {}
+
+class shodanThread (threading.Thread):
+	def __init__(self, threadID, name, ip, verbose=False):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.ip = ip
+		self.ipinfo = ""
+		self.verbose = verbose
+
+	def run(self):
+
+		try:
+			self.ipinfo = api.host(self.ip)
+
+			print('[+] target ip \t\t %s' % self.ip)
+			print(' ')#[-] ')
+			print('[-] os \t\t\t %s' % self.ipinfo['os'])
+			print('[-] org \t\t %s' % self.ipinfo['org'])
+			print('[-] city \t\t %s' % self.ipinfo['city'])
+			print('[-] region code \t %s' % self.ipinfo['region_code'])
+			print('[-] ISP \t\t %s' % self.ipinfo["isp"])
+			print('[-] country code \t %s' % self.ipinfo['country_code'])
+			print('[-] latitude \t\t %s' % self.ipinfo['latitude'])
+			print('[-] longitude \t\t %s' % self.ipinfo['longitude'])
+
+			print(' ')
+			print('[*] hostnames :')
+
+			for hostname in self.ipinfo["hostnames"]:
+				print("[-]\t%s" % hostname )
+
+			print(' ')
+			print('[*] Ports :')
+
+			i = 0
+			for port in self.ipinfo["ports"]:
+				print("[-]\t%s - %s" % (port, self.ipinfo["data"][i]["transport"]) )
+
+				i += 1
+
+			print( ' ')
+
+			sout[target] = self.ipinfo
+
+
+
+		except:
+			if (self.verbose):
+				print('[+] target ip \t\t %s' % self.ip)
+				print("[!] Not found.")
+				print( ' ')
+
+
+
 
 if __name__ == "__main__":
 
@@ -90,7 +148,6 @@ if __name__ == "__main__":
 			net4 = ipaddress.ip_network(args.target)
 
 			for x in net4.hosts():
-				#print(x)
 				todo.append(str(x))
 
 		elif "-" in args.target:
@@ -112,55 +169,20 @@ if __name__ == "__main__":
 		sys.exit()
 
 
-	if args.out:
-		sout = {}
-
+	threads = []
+	x = 0
 
 	for target in todo:
-		
+		# Create new threads
+		thread = shodanThread(x, "Thread-"+target, target, verbose = args.verbose)
+		# Start new Threads
+		thread.start()
 
-		# Lookup an IP
-		try:
-			ipinfo = api.host(target)
+		threads.append(thread)
 
-			print('[+] target ip \t\t %s' % target)
-			print(' ')#[-] ')
-			print('[-] os \t\t\t %s' % ipinfo['os'])
-			print('[-] org \t\t %s' % ipinfo['org'])
-			print('[-] city \t\t %s' % ipinfo['city'])
-			print('[-] region code \t %s' % ipinfo['region_code'])
-			print('[-] ISP \t\t %s' % ipinfo["isp"])
-			print('[-] country code \t %s' % ipinfo['country_code'])
-			print('[-] latitude \t\t %s' % ipinfo['latitude'])
-			print('[-] longitude \t\t %s' % ipinfo['longitude'])
-
-			print(' ')
-			print('[*] hostnames :')
-
-			for hostname in ipinfo["hostnames"]:
-				print("[-]\t%s" % hostname )
-
-			print(' ')
-			print('[*] Ports :')
-
-			i = 0
-			for port in ipinfo["ports"]:
-				print("[-]\t%s - %s" % (port, ipinfo["data"][i]["transport"]) )
-
-				i += 1
-
-			print( ' ')
-
-			if args.out:
-				sout[target] = ipinfo
-
-
-
-		except:
-			if (args.verbose):
-				print('[+] target ip \t\t %s' % target)
-				print("[!] Not found.")
-				print( ' ')
+	for thread in threads:
+		# wait threads to end
+		thread.join()
 
 
 	if args.out:
