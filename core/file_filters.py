@@ -19,6 +19,12 @@ def add_filter_nmap(dialog):
 	filter_text.add_mime_type("text/xml")
 	dialog.add_filter(filter_text)
 
+	filter_text = Gtk.FileFilter()
+	filter_text.set_name("smap json files")
+	filter_text.add_mime_type("application/json")
+	filter_text.add_mime_type("text/xml")
+	dialog.add_filter(filter_text)
+
 	filter_any = Gtk.FileFilter()
 	filter_any.set_name("Any files")
 	filter_any.add_pattern("*")

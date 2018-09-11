@@ -48,7 +48,7 @@ Extensions can be found under the "extension" directory,current available extens
 ## Setup ##
 install Kali linux dependecies:
 ```bash
-# apt install python3-pip python3-gi phantomjs gir1.2-gtk-vnc-2.0 ffmpeg 
+# apt install python3-pip python3-gi phantomjs gir1.2-gtk-vnc-2.0 gir1.2-gtksource-3.0 gir1.2-vte-2.91 ffmpeg 
 ```
 clone the repository:
 ```bash
