@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean
+from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
@@ -46,6 +46,8 @@ class nmap_host(Base):
 	uptime        = Column(String(100))
 	lastboot      = Column(String(100))
 	distance      = Column(Integer)
+	latitude      = Column(Float)
+	longitude     = Column(Float)
 	scripts       = Column(Text)
 
 class nmap_port(Base):
@@ -142,13 +144,16 @@ class DB:
 					add_host.hostname = hostname
 				if len(match) > 0:
 					add_host.os_match = match
-				if len(host.status) > 0:
+				if len(add_host.status) > 0:
 					add_host.status = "up"
+				
+				add_host.latitude = smap_out[host]["latitude"]
+				add_host.longitude = smap_out[host]["longitude"]
 
 
 			else:
 				# add the host to the db
-				add_host = nmap_host(address=host,scripts="", hostname=hostname, os_match=match, os_accuracy='', ipv4='', ipv6='', mac='', status="up", tcpsequence="", vendor="", uptime="", lastboot="", distance="")
+				add_host = nmap_host(address=host,scripts="", latitude=smap_out[host]["latitude"],longitude= smap_out[host]["longitude"],hostname=hostname, os_match=match, os_accuracy='', ipv4='', ipv6='', mac='', status="up", tcpsequence="", vendor="", uptime="", lastboot="", distance="")
 			
 			# commit to db
 			self.session.add(add_host)
@@ -165,11 +170,9 @@ class DB:
 					# update the existing port
 					add_port = self.session.query(nmap_port).filter( nmap_port.host_id == add_host.id, nmap_port.port == port, nmap_port.protocol == smap_out[host]["data"][i]["transport"] ).one()
 
-					if len(service.service) > 0:
+					if len(service) > 0:
 						add_port.service = service
 
-					if len(service.state) > 0:
-						add_port.state = "open"
 
 
 				else:
@@ -248,7 +251,7 @@ class DB:
 
 				else:
 					# add the host to the db
-					add_host = nmap_host(address=addr,scripts="", hostname="", os_match="", os_accuracy="", ipv4=addr, ipv6="", mac="", status="up", tcpsequence="", vendor="", uptime="", lastboot="", distance="")
+					add_host = nmap_host(address=addr,scripts="", latitude=0, longitude=0, hostname="", os_match="", os_accuracy="", ipv4=addr, ipv6="", mac="", status="up", tcpsequence="", vendor="", uptime="", lastboot="", distance="")
 					
 					# commit to db
 					self.session.add(add_host)
@@ -318,7 +321,7 @@ class DB:
 
 			else:
 				# add the host to the db
-				add_host = nmap_host(address=host.address,scripts=str(host.scripts_results), hostname=hostname, os_match=match, os_accuracy=accuracy, ipv4=host.ipv4, ipv6=host.ipv6, mac=host.mac, status=host.status, tcpsequence=host.tcpsequence, vendor=host.vendor, uptime=host.uptime, lastboot=host.lastboot, distance=host.distance)
+				add_host = nmap_host(address=host.address,scripts=str(host.scripts_results), latitude=0, longitude=0, hostname=hostname, os_match=match, os_accuracy=accuracy, ipv4=host.ipv4, ipv6=host.ipv6, mac=host.mac, status=host.status, tcpsequence=host.tcpsequence, vendor=host.vendor, uptime=host.uptime, lastboot=host.lastboot, distance=host.distance)
 			
 			# commit to db
 			self.session.add(add_host)
@@ -363,7 +366,7 @@ class DB:
 
 	def add_host(self, address):
 		""" add a host without scan it """
-		add_host = nmap_host(address=address, os_match="", status="", hostname="", ipv4="", mac="", vendor="", tcpsequence="", scripts="{}")
+		add_host = nmap_host(address=address, latitude=0, longitude=0, os_match="", status="", hostname="", ipv4="", mac="", vendor="", tcpsequence="", scripts="{}")
 
 		self.session.add(add_host)
 		self.session.commit()

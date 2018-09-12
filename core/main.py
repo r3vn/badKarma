@@ -799,6 +799,7 @@ class Handler:
 					self.database.import_masscan(outfile)
 
 				elif self.identify_scan(outfile) == "smap":
+					
 					self.database.import_shodan(outfile)
 			
 				self._sync()

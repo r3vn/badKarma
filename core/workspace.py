@@ -23,12 +23,16 @@ import gi
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('GtkSource', '3.0') 
+#gi.require_version('WebKit2', '4.0')
+gi.require_version('OsmGpsMap', '1.0')
 
 from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 from gi.repository import GtkSource
+#from gi.repository import WebKit2
+from gi.repository import OsmGpsMap as osmgpsmap
 
 from ast import literal_eval
 
@@ -822,11 +826,16 @@ class Hostview():
 		self.info_uptime	= builder.get_object("info-uptime")
 		self.info_target    = builder.get_object("target-label")
 		self.info_image     = builder.get_object("target-image")
+		self.info_latitude  = builder.get_object("info-latitude")
+		self.info_longitude = builder.get_object("info-longitude")
 
 		# history tab
 		self.info_vendor = builder.get_object("info-vendor")
 		self.history_box = builder.get_object("history-box")
 		self.scripts_box = builder.get_object("scripts-box")
+
+		# Geolocation tab
+		self.geoloc_box = builder.get_object("geoloc-box")
 
 		self.info_target.set_text(self.host.address)
 
@@ -837,11 +846,14 @@ class Hostview():
 
 		self.port_liststore = Gtk.ListStore(GdkPixbuf.Pixbuf, int, str, str, str, str, str, int)
 
+		self.geolocation_map = OSM(self.host.latitude, self.host.longitude)
 		
 		self.refresh(self.database)
 
 		# creating the treeview, making it use the filter as a model, and adding the columns
 		self.treeview = Gtk.TreeView(model=self.port_liststore)
+
+		
 
 
 
@@ -856,6 +868,8 @@ class Hostview():
 			self.treeview.append_column(column)
 
 		self.portlistframe.add(self.treeview)
+
+		self.geoloc_box.add(self.geolocation_map)
 		
 
 		self.treeview.show_all()
@@ -911,6 +925,10 @@ class Hostview():
 		self.info_vendor.set_text(host.vendor)
 		self.info_uptime.set_text(str(host.uptime) + " seconds")
 		self.info_tcpseq.set_text(host.tcpsequence)
+		self.info_latitude.set_text(str(host.latitude))
+		self.info_longitude.set_text(str(host.longitude))
+
+		self.geolocation_map.refresh(host.latitude, host.longitude)
 
 		textbuffer = self.scripts_box.get_buffer()
 
@@ -925,6 +943,34 @@ class Hostview():
 
 		except: pass
 		
+
+
+class OSM(osmgpsmap.Map):
+	def __init__(self, lat, long, *args, **kwargs):
+		super(OSM, self).__init__(*args, **kwargs)
+
+		self.layer_add(
+					osmgpsmap.MapOsd(
+						show_dpad=True,
+						show_zoom=True,
+						show_crosshair=True)
+		)
+
+
+		self.props.has_tooltip = True
+
+
+
+		self.show()
+		self.set_size_request(420,420)
+
+	def refresh(self, lat, long):
+		if lat != 0.0 and long != 0.0:
+			self.gps_add(lat, long, heading=12*360)
+		#self.convert_screen_to_geographic(lat, long)
+
+
+
 
 
 
