@@ -20,23 +20,17 @@ import os
 import signal
 import datetime
 import gi
+import copy
 
 gi.require_version('Gtk', '3.0')
-gi.require_version('GtkSource', '3.0') 
-#gi.require_version('WebKit2', '4.0')
-gi.require_version('OsmGpsMap', '1.0')
 
 from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import Gdk
 from gi.repository import GdkPixbuf
-from gi.repository import GtkSource
-#from gi.repository import WebKit2
-from gi.repository import OsmGpsMap as osmgpsmap
-
-from ast import literal_eval
 
 from core.extensions import Extensions
+from core.widgets import *
 
 import core.file_filters as file_filters
 import core.icons as iconslib
@@ -575,227 +569,6 @@ class Serviceview():
 
 			self.port_liststore.append(ports_list)
 
-class Notesview():
-	def __init__(self, host, database):
-		""" notes view per host """
-		builder = Gtk.Builder()
-		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/hostview.glade")
-
-		self.notes_view   = builder.get_object("notes-view")
-		self.notes_treepl = builder.get_object("notes-treepl")
-		self.add_button   = builder.get_object("add-button")
-
-		self.database = database
-		self.host     = host
-		
-		
-		# notes
-		self.notes_view = builder.get_object("notes-view")
-		self.notes_liststore = Gtk.ListStore(str, int)
-
-		self.notestree = Gtk.TreeView(model=self.notes_liststore)
-		
-
-		for i, column_title in enumerate(["title"]):
-			renderer = Gtk.CellRendererText()
-			column = Gtk.TreeViewColumn(column_title, renderer, text=i)
-			self.notestree.append_column(column)
-
-
-		self.notes_treepl.add(self.notestree)
-		self.notestree.show()
-		self.refresh(self.database)
-
-		self.notestree.connect("row-activated", self.on_row_activated)
-		self.add_button.connect("clicked", self.add_note)
-		self.notestree.connect("button_press_event", self.mouse_click)
-
-		self.notestree.props.activate_on_single_click = True
-
-		# multi selection
-		selection = self.notestree.get_selection()
-		selection.set_mode(Gtk.SelectionMode.MULTIPLE)
-
-
-	def refresh(self, database):
-
-		self.notes_liststore.clear()
-
-		self.database = database
-		self.notes    = self.database.get_notes(self.host.id)
-
-		for nota in self.notes:
-			self.notes_liststore.append([nota.title, nota.id])
-
-	def mouse_click(self, tv, event):
-		# right click on a note
-		try:
-			self.rightclickmenu.destroy()
-		except: pass
-
-		if event.button == 3:
-
-			# get selected port
-			self.rightclickmenu = Gtk.Menu()
-
-			note_selected = []
-
-			(model, pathlist) = tv.get_selection().get_selected_rows()
-			for path in pathlist :
-				tree_iter = model.get_iter(path)
-				
-				idz = model.get_value(tree_iter,1)
-
-				note_selected.append(idz)
-				
-			i1 = Gtk.MenuItem("delete")
-			i2 = Gtk.MenuItem("rename")
-
-			i1.connect("activate", self.delete_note, note_selected)
-			i2.connect("activate", self.rename_note, path)
-
-				
-			self.rightclickmenu.append(i1)
-			self.rightclickmenu.append(i2)
-
-			# show all
-			self.rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
-			self.rightclickmenu.show_all()
-
-
-	def add_note(self, widget):
-
-		""" add a note to the db """
-
-		try:
-			self.scrolledwindow.destroy()
-		except: pass
-
-		title, id = self.database.add_note(self.host.id, "note "+str(len(self.notes_liststore)), "") # FIXME
-		self.notes_liststore.append([title, id])
-
-		self.scrolledwindow = Gtk.ScrolledWindow()
-		self.scrolledwindow.set_hexpand(True)
-		self.scrolledwindow.set_vexpand(True)
-
-		self.note_box = GtkSource.View()
-		textbuffer = self.note_box.get_buffer()
-		textbuffer.set_text("")
-		self.notestree = Gtk.TreeView(model=self.notes_liststore)
-		self.note_box.set_show_line_numbers(True)
-
-		self.scrolledwindow.add(self.note_box)
-		self.note_box.show()
-		self.scrolledwindow.show()
-
-		self.notes_view.add(self.scrolledwindow)
-
-		self.note_box.connect("move-cursor", self.save_note, id)
-
-		self.id = id
-
-	
-	def on_row_activated(self, listbox, cell, listboxrow):
-
-		try:
-			self.save_note('','','','',self.id)
-			self.scrolledwindow.destroy()
-		except: pass
-
-		(model, pathlist) = listbox.get_selection().get_selected_rows()
-		for path in pathlist :
-
-			tree_iter = model.get_iter(path)
-			id = model.get_value(tree_iter,1)
-
-			nota = self.database.get_note(id)
-
-			self.scrolledwindow = Gtk.ScrolledWindow()
-			self.scrolledwindow.set_hexpand(True)
-			self.scrolledwindow.set_vexpand(True)
-
-			self.note_box = GtkSource.View()
-			textbuffer = self.note_box.get_buffer()
-			textbuffer.set_text(nota.text)
-			self.notestree = Gtk.TreeView(model=self.notes_liststore)
-			self.note_box.set_show_line_numbers(True)
-
-			self.scrolledwindow.add(self.note_box)
-			self.note_box.show()
-			self.scrolledwindow.show()
-
-			self.notes_view.add(self.scrolledwindow)
-			self.note_box.connect("move-cursor", self.save_note, id)
-
-			self.id = id
-
-
-	def save_note(self, widget, lc, addff, fef, id):
-
-		start_iter = self.note_box.get_buffer().get_start_iter()
-		end_iter = self.note_box.get_buffer().get_end_iter()
-		text = self.note_box.get_buffer().get_text(start_iter, end_iter, True)  
-
-		self.database.save_note(id, text)
-
-	def rename_note(self, widget, cell):
-		#cell.set_property("editable", True)
-		""" todo """
-
-	def delete_note(self, widget, note_selected):
-		# delete a note from the db
-		# ask for confirmation with a dialog
-		dialog = Gtk.MessageDialog(Gtk.Window(), 0, Gtk.MessageType.WARNING,
-			Gtk.ButtonsType.OK_CANCEL, "Delete note?")
-		dialog.format_secondary_text(
-			"This operation will be irreversible.")
-		response = dialog.run()
-
-		if response == Gtk.ResponseType.OK:
-			dialog.close()
-
-			for note in note_selected:
-				self.database.remove_note(note)
-
-			try:
-				self.scrolledwindow.destroy()
-			except: pass
-
-			self.refresh(self.database)
-
-		elif response == Gtk.ResponseType.CANCEL:
-			dialog.close()
-
-
-class Historyview():
-	def __init__(self, host, database):
-		""" Single host's task history """
-		self.database = database
-		self.host     = host
-
-		self.history_liststore = Gtk.ListStore(int, str, str, int, str)
-		self.history_tree      = Gtk.TreeView(model=self.history_liststore)
-
-		for i, column_title in enumerate(["id","Started", "Ended", "Pid", "Task"]):
-			renderer = Gtk.CellRendererText()
-			column = Gtk.TreeViewColumn(column_title, renderer, text=i)
-
-			self.history_tree.append_column(column)
-
-		self.refresh(self.database)
-
-	def refresh(self, database):
-		""" refresh history """
-		self.history_liststore.clear()
-
-		self.database = database
-		self.history  = self.database.get_history(self.host.address)
-
-		for task in self.history:
-			self.history_liststore.append([task.id, task.start_time, task.end_time, task.pid, task.title])
-
-
-
 
 class Hostview():
 	def __init__(self, host, database):
@@ -810,168 +583,97 @@ class Hostview():
 		self.notebook = builder.get_object("notebook1")
 		self.portlistframe = builder.get_object("portlistframe")
 
-		self.notes_view = Notesview(host, database)
-		self.notes_place = builder.get_object("notes-place")
-		self.notes_place.add(self.notes_view.notes_view)
+		# tab title
+		self.dash_title = builder.get_object("dash-title")
+		self.dash_title.set_text("Target: %s" % self.host.address)
 
 		# info-tab
-		self.info_mac		= builder.get_object("info-mac")
-		self.info_os		= builder.get_object("info-os")
-		self.info_os_short  = builder.get_object("info-os-short")
-		self.info_status	= builder.get_object("info-status")
-		self.info_address   = builder.get_object("info-address")
-		self.info_hostnames = builder.get_object("info-hostnames")
-		self.info_distance  = builder.get_object("info-distance")
-		self.info_tcpseq	= builder.get_object("info-tcpseq")
-		self.info_uptime	= builder.get_object("info-uptime")
-		self.info_target    = builder.get_object("target-label")
-		self.info_image     = builder.get_object("target-image")
-		self.info_latitude  = builder.get_object("info-latitude")
-		self.info_longitude = builder.get_object("info-longitude")
+		self.info_loc = builder.get_object("tab-info-location")
+		self.info_tab = host_informations(self.host, self.database)
+
+		self.info_loc.add(self.info_tab)
+
+		# notes
+		self.notes_place = builder.get_object("notes-place")
+		self.notes_view = Notesview(database, host)
+		self.notes_place.add(self.notes_view)
 
 		# history tab
-		self.info_vendor = builder.get_object("info-vendor")
 		self.history_box = builder.get_object("history-box")
-		self.scripts_box = builder.get_object("scripts-box")
+
+		self.history_view = Historyview(self.database, self.host)
+
+		self.history_box.add(self.history_view)
+		self.history_box.show_all()
 
 		# Geolocation tab
 		self.geoloc_box = builder.get_object("geoloc-box")
+		self.geolocation_map = OSM(self.database, self.host)
+		self.geoloc_box.add(self.geolocation_map)
+
+		# title
+		self.info_target    = builder.get_object("target-label")
+		self.info_os_short  = builder.get_object("info-os-short")
+		self.info_image     = builder.get_object("target-image")
 
 		self.info_target.set_text(self.host.address)
 
-		self.history_view = Historyview(self.host, self.database)
+		# services
+		self.treeview = PortsTree(self.database, self.host) #Gtk.TreeView(model=self.port_liststore)
 
-		self.history_box.add(self.history_view.history_tree)
-		self.history_box.show_all()
-
-		self.port_liststore = Gtk.ListStore(GdkPixbuf.Pixbuf, int, str, str, str, str, str, int)
-
-		self.geolocation_map = OSM(self.host.latitude, self.host.longitude)
-		
-		self.refresh(self.database)
-
-		# creating the treeview, making it use the filter as a model, and adding the columns
-		self.treeview = Gtk.TreeView(model=self.port_liststore)
-
-		
-
-
-
-		for i, column_title in enumerate(["#","Port", "State", "Type", "Service", "Banner", "Fingerprint"]):
-			if i == 0:
-
-				renderer = Gtk.CellRendererPixbuf()
-				column = Gtk.TreeViewColumn(column_title, renderer, pixbuf=0)
-			else:
-				renderer = Gtk.CellRendererText()
-				column = Gtk.TreeViewColumn(column_title, renderer, text=i)
-			self.treeview.append_column(column)
 
 		self.portlistframe.add(self.treeview)
-
-		self.geoloc_box.add(self.geolocation_map)
-		
-
 		self.treeview.show_all()
 		self.portlistframe.show()
+
+		# expand buttons
+		self.tab_info_button     = builder.get_object("tab-info-button")
+		self.tab_services_button = builder.get_object("tab-services-button")
+		self.tab_geoloc_button   = builder.get_object("tab-geoloc-button")
+		self.tab_notes_button    = builder.get_object("tab-notes-button")
+		self.tab_history_button  = builder.get_object("tab-history-button")
+
+		self.tab_services_button.connect("clicked", self.tab_clicked_max, "Services", self.treeview, self.portlistframe)
+		self.tab_geoloc_button.connect("clicked", self.tab_clicked_max, "Geolocation", self.geolocation_map, self.geoloc_box)
+		self.tab_info_button.connect("clicked", self.tab_clicked_max, "Informations", self.info_tab, self.info_loc)
+		self.tab_notes_button.connect("clicked", self.tab_clicked_max, "Notes", self.notes_view, self.notes_place)
+		self.tab_history_button.connect("clicked", self.tab_clicked_max, "Task's history", self.history_view, self.history_box)
+		
+		self.refresh(self.database)
 
 	def refresh(self, db, history = False):
 
 		# refresh history
-		self.history_view.refresh(self.database)
+		self.database = db
 
 		if history:
 			# refresh ONLY history
+			self.history_view.refresh(self.database,self.host)
+
 			return True
 
+		self.history_view.refresh(self.database, self.host)
+		self.treeview.refresh(self.database, self.host)
+		self.geolocation_map.refresh(self.database, self.host)
+		self.info_tab.refresh(self.database, self.host)
 
-		ports = self.database.get_ports_by_host(self.host)
-		self.port_liststore.clear()
+		self.info_os_short.set_text(str(self.host.os_match).split("\n")[0])
+		self.info_image.set_from_pixbuf(iconslib.get_icon(self.host.os_match,lg=True))
 
-		for port in ports:
-			# fill the list
+	def tab_clicked_max(self, button, name, oldobj, oldparent):
+		""" Fullscreen option """
+		if not oldobj.fullscreen:
+			oldparent.remove(oldobj)
+			self.notebook.append_page(oldobj,Gtk.Label(name))
 
-			ports_list = []
+			self.notebook.set_current_page(-1)
+			oldobj.fullscreen = True
+		else:
+			page_id = self.notebook.page_num(oldobj)
+			self.notebook.remove_page(page_id)
 
-			if port.state == "open" and port.service != "tcpwrapped":
-				ports_list.append(iconslib.port_open_icon())
-			else:
-				ports_list.append(iconslib.port_closed_icon())
-				
-			ports_list.append(port.port)
-			ports_list.append(port.state)
-			ports_list.append(port.protocol)
-			ports_list.append(port.service)
-			ports_list.append(port.banner) #.replace("product: ",""))
-			ports_list.append(port.fingerprint)
-			ports_list.append(port.id)
-
-			self.port_liststore.append(ports_list)
-
-
-		# Fill info tab
-		host = self.host
-		self.info_os.set_text(str(host.os_match))#.split("\n")[0]
-		self.info_os_short.set_text(str(host.os_match).split("\n")[0])
-		self.info_image.set_from_pixbuf(iconslib.get_icon(host.os_match,lg=True))
-
-		hostnamestring = ""
-		
-		self.info_status.set_text(host.status)
-		self.info_hostnames.set_text(host.hostname)
-		self.info_address.set_text(host.address)
-		self.info_distance.set_text(str(host.distance)+" hops")
-		self.info_mac.set_text(host.mac)
-		self.info_vendor.set_text(host.vendor)
-		self.info_uptime.set_text(str(host.uptime) + " seconds")
-		self.info_tcpseq.set_text(host.tcpsequence)
-		self.info_latitude.set_text(str(host.latitude))
-		self.info_longitude.set_text(str(host.longitude))
-
-		self.geolocation_map.refresh(host.latitude, host.longitude)
-
-		textbuffer = self.scripts_box.get_buffer()
-
-		scripts_box = ""
-
-		try:
-			for script in literal_eval(host.scripts):
-
-				scripts_box += "[+] " + script["id"] + ":\n" + script["output"] + "\n\n"
-
-			textbuffer.set_text(scripts_box)
-
-		except: pass
-		
-
-
-class OSM(osmgpsmap.Map):
-	def __init__(self, lat, long, *args, **kwargs):
-		super(OSM, self).__init__(*args, **kwargs)
-
-		self.layer_add(
-					osmgpsmap.MapOsd(
-						show_dpad=True,
-						show_zoom=True,
-						show_crosshair=True)
-		)
-
-
-		self.props.has_tooltip = True
-
-
-
-		self.show()
-		self.set_size_request(420,420)
-
-	def refresh(self, lat, long):
-		if lat != 0.0 and long != 0.0:
-			self.gps_add(lat, long, heading=12*360)
-		#self.convert_screen_to_geographic(lat, long)
-
-
-
-
+			oldobj.fullscreen = False
+			oldparent.add(oldobj)
 
 
 class Main():

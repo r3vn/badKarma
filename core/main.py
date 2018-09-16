@@ -467,7 +467,7 @@ class Handler:
 
 	def _history_activated(self, listbox, cell, listboxrow):
 
-		(model, pathlist) = self.work.history_view.history_tree.get_selection().get_selected_rows()
+		(model, pathlist) = self.work.history_view.treeview.get_selection().get_selected_rows()
 		for path in pathlist :
 
 			tree_iter = model.get_iter(path)
@@ -498,7 +498,7 @@ class Handler:
 				self.work = Hostview(db_host, self.database)
 
 				# connect the history view to click event
-				self.work.history_view.history_tree.connect("row-activated", self._history_activated)
+				self.work.history_view.treeview.connect("row-activated", self._history_activated)
 
 				self.scenes["hosts_view"][str(host_id)] = self.work
 
@@ -507,7 +507,7 @@ class Handler:
 		self._selected_opt["domain"] = self.work.host.hostname
 		self.main.workspace.add(self.work.notebook)
 
-		self.work.treeview.connect("button_press_event", self.mouse_click)
+		self.work.treeview.treeview.connect("button_press_event", self.mouse_click)
 
 
 	def run_multi_extra(self, widget, targets,  ext, service):
@@ -665,7 +665,7 @@ class Handler:
 				(model, pathlist) = self.services_view.treeview.get_selection().get_selected_rows()
 				
 			else:
-				(model, pathlist) = self.work.treeview.get_selection().get_selected_rows()
+				(model, pathlist) = self.work.treeview.treeview.get_selection().get_selected_rows()
 
 			if len(pathlist) < 1:
 				# right click on nothing
