@@ -512,8 +512,7 @@ class Handler():
 
 	def run_multi_extra(self, widget, targets,  ext, service):
 		""" take a screenshot on multiple targets """
-		print (targets)
-		print("ao")
+
 		for serv in targets:
 
 			try:
