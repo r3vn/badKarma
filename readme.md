@@ -38,7 +38,7 @@ Extensions can be found under the "extension" directory,current available extens
  - __Screenshot:__ this extension allow the tester to take screenshots of possibile http,rdp,rtsp,vnc and x11 servers, screenshots will be stored in the session file as base64 and can be shown from badKarma.
  - __Browser:__ just an "open in browser" for http menu item, take it as an example to build your own extensions.
 
-## Screenshots ##
+## Screenshots ( to update ) ##
 <p align="center">
 <img width="710" src="https://user-images.githubusercontent.com/635790/45002099-7161df80-afd3-11e8-8131-a4dfd8090562.gif">
 </p>
