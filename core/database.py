@@ -29,57 +29,58 @@ import json
 
 Base = declarative_base()
 
-class nmap_host(Base):
-	__tablename__ = "nmap_host"
+class targets(Base):
+	__tablename__ = "targets"
 
 	id            = Column(Integer, primary_key=True)
-	address       = Column(String(50))
-	os_match      = Column(Text)
-	os_accuracy   = Column(Text)
-	ipv4          = Column(String(50))
-	ipv6          = Column(String(250))
-	mac           = Column(String(50))
-	status        = Column(String(50))
-	tcpsequence   = Column(String(200))
-	hostname      = Column(Text)
-	vendor        = Column(Text)
-	uptime        = Column(String(100))
-	lastboot      = Column(String(100))
-	distance      = Column(Integer)
-	latitude      = Column(Float)
-	longitude     = Column(Float)
-	scripts       = Column(Text)
+	address       = Column(String(50), nullable=False)
+	os_match      = Column(Text, nullable=True)
+	os_accuracy   = Column(Text, nullable=True)
+	ipv4          = Column(String(50), nullable=True)
+	ipv6          = Column(String(250), nullable=True)
+	mac           = Column(String(50), nullable=True)
+	status        = Column(String(50), nullable=True)
+	tcpsequence   = Column(String(200), nullable=True)
+	hostname      = Column(Text, nullable=True)
+	vendor        = Column(Text, nullable=True)
+	uptime        = Column(String(100), nullable=True)
+	lastboot      = Column(String(100), nullable=True)
+	distance      = Column(Integer, nullable=True)
+	latitude      = Column(Float, nullable=True)
+	longitude     = Column(Float, nullable=True)
+	scripts       = Column(Text, nullable=True)
 
-class nmap_port(Base):
-	__tablename__ = "nmap_port"
+class services(Base):
+	__tablename__ = "services"
 
 	id          = Column(Integer, primary_key=True)
-	port        = Column(Integer)
-	protocol    = Column(String(3))
-	service     = Column(String(200))
-	fingerprint = Column(Text)
-	state       = Column(String(200))
-	banner      = Column(Text)
-	host        = relationship(nmap_host)
-	host_id     = Column(Integer, ForeignKey('nmap_host.id'))
+	port        = Column(Integer, nullable=False)
+	protocol    = Column(String(3), nullable=False)
+	service     = Column(String(200), nullable=False)
+	fingerprint = Column(Text, nullable=True)
+	state       = Column(String(200), nullable=False)
+	banner      = Column(Text, nullable=True)
+	host        = relationship(targets)
+	host_id     = Column(Integer, ForeignKey('targets.id'))
 
 class activity_log(Base):
 	__tablename__ = "activity_log"
 
 	id         = Column(Integer, primary_key=True)
-	pid        = Column(Integer)
-	start_time = Column(String(200))
-	end_time   = Column(String(200))
-	title      = Column(String(200))
-	output     = Column(Text)
-	extension  = Column(Text)
+	pid        = Column(Integer, nullable=False)
+	start_time = Column(String(200), nullable=False)
+	end_time   = Column(String(200), nullable=False)
+	title      = Column(String(200), nullable=False)
+	output     = Column(Text, nullable=True)
+	extension  = Column(Text, nullable=True)
+	target     = Column(Text, nullable=True)
 
 class notes(Base):
 	__tablename__ = "notes"
 
 	id      = Column(Integer, primary_key=True)
-	host    = relationship(nmap_host)
-	host_id = Column(Integer, ForeignKey("nmap_host.id"))
+	host    = relationship(targets)
+	host_id = Column(Integer, ForeignKey("targets.id"))
 	title   = Column(String(200))
 	text    = Column(Text)
 
@@ -136,7 +137,7 @@ class DB:
 			# check if the host is already in the db
 			if self.host_exist(host):
 				# update
-				add_host = self.session.query(nmap_host).filter( nmap_host.address == host ).one()
+				add_host = self.session.query(targets).filter( targets.address == host ).one()
 				
 				# update values only if there's more informations
 
@@ -153,7 +154,7 @@ class DB:
 
 			else:
 				# add the host to the db
-				add_host = nmap_host(address=host,scripts="", latitude=smap_out[host]["latitude"],longitude= smap_out[host]["longitude"],hostname=hostname, os_match=match, os_accuracy='', ipv4='', ipv6='', mac='', status="up", tcpsequence="", vendor="", uptime="", lastboot="", distance="")
+				add_host = targets(address=host, latitude=smap_out[host]["latitude"],longitude= smap_out[host]["longitude"],hostname=hostname, os_match=match, status="up")
 			
 			# commit to db
 			self.session.add(add_host)
@@ -168,7 +169,7 @@ class DB:
 
 				if self.port_exist(add_host.id, port, smap_out[host]["data"][i]["transport"]):
 					# update the existing port
-					add_port = self.session.query(nmap_port).filter( nmap_port.host_id == add_host.id, nmap_port.port == port, nmap_port.protocol == smap_out[host]["data"][i]["transport"] ).one()
+					add_port = self.session.query(services).filter( services.host_id == add_host.id, services.port == port, services.protocol == smap_out[host]["data"][i]["transport"] ).one()
 
 					if len(service) > 0:
 						add_port.service = service
@@ -177,7 +178,7 @@ class DB:
 
 				else:
 					# add the new port
-					add_port = nmap_port(port=port, protocol=smap_out[host]["data"][i]["transport"], service=service, fingerprint="", state="open", banner="", host = add_host)
+					add_port = services(port=port, protocol=smap_out[host]["data"][i]["transport"], service=service, fingerprint="", state="open", banner="", host = add_host)
 
 				# commit to db
 				self.session.add(add_port)
@@ -225,7 +226,7 @@ class DB:
 
 					if self.port_exist(add_host.id, port, proto):
 						# update the existing port
-						add_port = self.session.query(nmap_port).filter( nmap_port.host_id == add_host.id, nmap_port.port == port, nmap_port.protocol == proto ).one()
+						add_port = self.session.query(services).filter( services.host_id == add_host.id, services.port == port, services.protocol == proto ).one()
 
 						if len(service) > 0:
 							add_port.service = service
@@ -239,7 +240,7 @@ class DB:
 
 					else:
 						# add the new port
-						add_port = nmap_port(port=port, protocol=proto, service=service, fingerprint="", state=port_state, banner=banner, host = out[addr])
+						add_port = services(port=port, protocol=proto, service=service, fingerprint=banner, state=port_state, banner="", host = out[addr])
 
 						# commit to db
 						self.session.add(add_port)
@@ -247,11 +248,11 @@ class DB:
 			else:
 				if self.host_exist(addr):
 
-					add_host = self.session.query(nmap_host).filter( nmap_host.address == addr ).one()
+					add_host = self.session.query(targets).filter( targets.address == addr ).one()
 
 				else:
 					# add the host to the db
-					add_host = nmap_host(address=addr,scripts="", latitude=0, longitude=0, hostname="", os_match="", os_accuracy="", ipv4=addr, ipv6="", mac="", status="up", tcpsequence="", vendor="", uptime="", lastboot="", distance="")
+					add_host = targets(address=addr, status="up")
 					
 					# commit to db
 					self.session.add(add_host)
@@ -289,7 +290,7 @@ class DB:
 			# check if the host is already in the db
 			if self.host_exist(host.address):
 				# update
-				add_host = self.session.query(nmap_host).filter( nmap_host.address == host.address ).one()
+				add_host = self.session.query(targets).filter( targets.address == host.address ).one()
 				
 				# update values only if there's more informations
 				if len(str(host.scripts_results)) > 3:
@@ -321,7 +322,7 @@ class DB:
 
 			else:
 				# add the host to the db
-				add_host = nmap_host(address=host.address,scripts=str(host.scripts_results), latitude=0, longitude=0, hostname=hostname, os_match=match, os_accuracy=accuracy, ipv4=host.ipv4, ipv6=host.ipv6, mac=host.mac, status=host.status, tcpsequence=host.tcpsequence, vendor=host.vendor, uptime=host.uptime, lastboot=host.lastboot, distance=host.distance)
+				add_host = targets(address=host.address,scripts=str(host.scripts_results), hostname=hostname, os_match=match, os_accuracy=accuracy, ipv4=host.ipv4, ipv6=host.ipv6, mac=host.mac, status=host.status, tcpsequence=host.tcpsequence, vendor=host.vendor, uptime=host.uptime, lastboot=host.lastboot, distance=host.distance)
 			
 			# commit to db
 			self.session.add(add_host)
@@ -333,7 +334,7 @@ class DB:
 
 				if self.port_exist(add_host.id, port[0], port[1]):
 					# update the existing port
-					add_port = self.session.query(nmap_port).filter( nmap_port.host_id == add_host.id, nmap_port.port == port[0], nmap_port.protocol == port[1] ).one()
+					add_port = self.session.query(services).filter( services.host_id == add_host.id, services.port == port[0], services.protocol == port[1] ).one()
 
 					if len(service.service) > 0:
 						add_port.service = service.service
@@ -348,7 +349,7 @@ class DB:
 
 				else:
 					# add the new port
-					add_port = nmap_port(port=port[0], protocol=port[1], service=service.service, fingerprint=service.servicefp, state=service.state, banner=service.banner, host = add_host)
+					add_port = services(port=port[0], protocol=port[1], service=service.service, fingerprint=service.servicefp, state=service.state, banner=service.banner, host = add_host)
 
 				# commit to db
 				self.session.add(add_port)
@@ -366,7 +367,7 @@ class DB:
 
 	def add_host(self, address):
 		""" add a host without scan it """
-		add_host = nmap_host(address=address, latitude=0, longitude=0, os_match="", status="", hostname="", ipv4="", mac="", vendor="", tcpsequence="", scripts="{}")
+		add_host = targets(address=address)
 
 		self.session.add(add_host)
 		self.session.commit()
@@ -388,14 +389,14 @@ class DB:
 
 	def host_exist(self, ipv4):
 		# function to check if a host is already in the databse
-		if len(self.session.query(nmap_host).filter( nmap_host.address == ipv4 ).all()) > 0:
+		if len(self.session.query(targets).filter( targets.address == ipv4 ).all()) > 0:
 			return True
 		
 		return False
 
 	def port_exist(self, host_id, port, protocol):
 		# function to check if a port is already in the database
-		if len(self.session.query(nmap_port).filter( nmap_port.host_id == host_id, nmap_port.port == port, nmap_port.protocol == protocol ).all()) > 0:
+		if len(self.session.query(services).filter( services.host_id == host_id, services.port == port, services.protocol == protocol ).all()) > 0:
 			return True
 		
 		return False
@@ -407,25 +408,25 @@ class DB:
 		return self.session.query(notes).filter( notes.host_id == host_id ).all()
 
 	def get_hosts(self):
-		return self.session.query(nmap_host).all()
+		return self.session.query(targets).all()
 
 	def get_host(self, id):
-		return self.session.query(nmap_host).filter( nmap_host.id == id ).one()
+		return self.session.query(targets).filter( targets.id == id ).one()
 
 	def get_port(self,id):
-		return self.session.query(nmap_port).filter( nmap_port.id == id ).one()
+		return self.session.query(services).filter( services.id == id ).one()
 
 	def get_service(self, id):
-		return self.session.query(nmap_port).filter( nmap_port.service == id ).all()
+		return self.session.query(services).filter( services.service == id ).all()
 
 	def get_services_uniq(self):
-		return self.session.query(nmap_port.service).distinct()
+		return self.session.query(services.service).distinct()
 
 	def get_ports_by_service(self, service):
-		return self.session.query(nmap_port).filter( nmap_port.service == service ).all()
+		return self.session.query(services).filter( services.service == service ).all()
 
 	def get_ports_by_host(self, host):
-		return self.session.query(nmap_port).filter( nmap_port.host == host ).all()
+		return self.session.query(services).filter( services.host == host ).all()
 
 
 	def get_logs(self, id=''):
@@ -458,8 +459,8 @@ class DB:
 
 	def remove_host(self, id):
 		#print(address)
-		todel = self.session.query(nmap_host).filter( nmap_host.id == id ).one()
-		todel_2 = self.session.query(nmap_port).filter( nmap_port.host_id == id ).all()
+		todel = self.session.query(targets).filter( targets.id == id ).one()
+		todel_2 = self.session.query(services).filter( services.host_id == id ).all()
 
 		self.session.delete(todel)
 		for to in todel_2:

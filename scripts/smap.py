@@ -70,7 +70,7 @@ class shodanThread (threading.Thread):
 
 			print( ' ')
 
-			sout[target] = self.ipinfo
+			sout[self.ip] = self.ipinfo
 
 
 

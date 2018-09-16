@@ -57,8 +57,6 @@ class host_informations(Gtk.ScrolledWindow):
 		self.info_latitude  = builder.get_object("info-latitude")
 		self.info_longitude = builder.get_object("info-longitude")
 
-		self.fullscreen = False
-
 		viewport = Gtk.Viewport()
 		viewport.add(self.info_viewport)
 		viewport.set_vexpand(True)
@@ -78,16 +76,36 @@ class host_informations(Gtk.ScrolledWindow):
 
 		hostnamestring = ""
 		
-		self.info_status.set_text(host.status)
-		self.info_hostnames.set_text(host.hostname)
-		self.info_address.set_text(host.address)
-		self.info_distance.set_text(str(host.distance)+" hops")
-		self.info_mac.set_text(host.mac)
-		self.info_vendor.set_text(host.vendor)
-		self.info_uptime.set_text(str(host.uptime) + " seconds")
-		self.info_tcpseq.set_text(host.tcpsequence)
-		self.info_latitude.set_text(str(host.latitude))
-		self.info_longitude.set_text(str(host.longitude))
+		try:
+			self.info_status.set_text(host.status)
+		except:pass
+		try:
+			self.info_hostnames.set_text(host.hostname)
+		except:pass
+		try:
+			self.info_address.set_text(host.address)
+		except:pass
+		try:
+			self.info_distance.set_text(str(host.distance)+" hops")
+		except:pass
+		try:
+			self.info_mac.set_text(host.mac)
+		except:pass
+		try:
+			self.info_vendor.set_text(host.vendor)
+		except: pass
+		try:
+			self.info_uptime.set_text(str(host.uptime) + " seconds")
+		except: pass
+		try:
+			self.info_tcpseq.set_text(host.tcpsequence)
+		except: pass
+		try:
+			self.info_latitude.set_text(str(host.latitude))
+		except: pass
+		try:
+			self.info_longitude.set_text(str(host.longitude))
+		except: pass
 
 
 class OSM(osmgpsmap.Map):
@@ -108,8 +126,6 @@ class OSM(osmgpsmap.Map):
 		self.host = host
 		self.database = database
 
-		self.fullscreen = False
-
 		self.show()
 		self.set_property("height-request", 450)
 		#self.set_size_request(420,420)
@@ -120,39 +136,30 @@ class OSM(osmgpsmap.Map):
 		lat  = host.latitude
 		long = host.longitude
 
-		if lat != 0.0 and long != 0.0:
+		if lat and long:
 			self.gps_add(lat, long, heading=12*360)
 		#self.convert_screen_to_geographic(lat, long)
 
 
 
-class Historyview(Gtk.ScrolledWindow):
+class Historyview(Gtk.TreeView):
 	def __init__(self, database, host, *args, **kwargs):
 		super(Historyview, self).__init__(*args, **kwargs)
 		""" Single host's task history """
 
-		self.treeview = Gtk.TreeView()
-		viewport = Gtk.Viewport()
-
-		viewport.add(self.treeview)
-		self.add(viewport)
-
 		self.database = database
 		self.host     = host
-
-		self.fullscreen = False
-
-		
-		self.treeview.set_model(Gtk.ListStore(int, str, str, int, str))
-		self.history_liststore = self.treeview.get_model()
+	
+		self.set_model(Gtk.ListStore(int, str, str, int, str))
+		self.history_liststore = self.get_model()
 
 		for i, column_title in enumerate(["id","Started", "Ended", "Pid", "Task"]):
 			renderer = Gtk.CellRendererText()
 			column = Gtk.TreeViewColumn(column_title, renderer, text=i)
 
-			self.treeview.append_column(column)
+			self.append_column(column)
 
-		self.set_property("height-request", 450)
+		#self.set_property("height-request", 450)
 
 		self.show_all()
 
@@ -172,21 +179,72 @@ class Historyview(Gtk.ScrolledWindow):
 
 
 
-class PortsTree(Gtk.ScrolledWindow):
+class ServicesTree(Gtk.TreeView):
+	def __init__(self, database, service, *args, **kwargs):
+		super(ServicesTree, self).__init__(*args, **kwargs)
+		""" Single service ports treeview class """
+
+		self.database = database
+		self.service = service
+
+		self.set_model(Gtk.ListStore(GdkPixbuf.Pixbuf, int, str, str, str, str, str, int))
+		self.port_liststore = self.get_model()
+
+		for i, column_title in enumerate(["#","Port", "State", "Type", "Host", "Banner", "Fingerprint"]):
+			if i == 0:
+
+				renderer = Gtk.CellRendererPixbuf()
+				column = Gtk.TreeViewColumn(column_title, renderer, pixbuf=0)
+			else:
+				renderer = Gtk.CellRendererText()
+				column = Gtk.TreeViewColumn(column_title, renderer, text=i)
+
+			self.append_column(column)
+
+		# multi selection
+		selection = self.get_selection()
+		selection.set_mode(Gtk.SelectionMode.MULTIPLE)
+
+		
+
+	def refresh(self, db, service):
+
+		self.database = db
+		self.service = service
+
+		self.ports = self.database.get_ports_by_service(self.service)
+		self.port_liststore.clear()
+
+		for port in self.ports:
+			# fill the list
+
+			ports_list = []
+			#host = self.database.get_host_from_port(port)
+
+			if port.state == "open" and port.service != "tcpwrapped":
+				ports_list.append(iconslib.port_open_icon())
+			else:
+				ports_list.append(iconslib.port_closed_icon())
+
+			ports_list.append(port.port)
+			ports_list.append(port.state)
+			ports_list.append(port.protocol)
+			ports_list.append(port.host.address)
+			ports_list.append(port.banner) #.replace("product: ",""))
+			ports_list.append(port.fingerprint)
+			ports_list.append(port.id)
+
+			self.port_liststore.append(ports_list)
+
+
+
+class PortsTree(Gtk.TreeView):
 	def __init__(self, database, host, *args, **kwargs):
 		super(PortsTree, self).__init__(*args, **kwargs)
 		""" Single host ports treeview class """
 
-		self.treeview = Gtk.TreeView()
-		viewport = Gtk.Viewport()
-
-		viewport.add(self.treeview)
-		self.add(viewport)
-
-		self.fullscreen = False
-
-		self.treeview.set_model(Gtk.ListStore(GdkPixbuf.Pixbuf, int, str, str, str, str, str, int))
-		self.port_liststore = self.treeview.get_model()
+		self.set_model(Gtk.ListStore(GdkPixbuf.Pixbuf, int, str, str, str, str, str, int))
+		self.port_liststore = self.get_model()
 		
 		for i, column_title in enumerate(["#","Port", "State", "Type", "Service", "Banner", "Fingerprint"]):
 			if i == 0:
@@ -197,9 +255,8 @@ class PortsTree(Gtk.ScrolledWindow):
 				renderer = Gtk.CellRendererText()
 				column = Gtk.TreeViewColumn(column_title, renderer, text=i)
 
-			self.treeview.append_column(column)
+			self.append_column(column)
 
-		self.set_property("height-request", 450)
 		self.show_all()
 
 	def refresh(self, database, host):
@@ -246,12 +303,8 @@ class Notesview(Gtk.ScrolledWindow):
 		self.notes_treepl = builder.get_object("notes-treepl")
 		self.add_button   = builder.get_object("add-button")
 
-
 		self.database = database
 		self.host     = host
-
-		self.fullscreen = False
-		
 		
 		# notes
 		self.notes_view = builder.get_object("notes-view")

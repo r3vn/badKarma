@@ -517,57 +517,29 @@ class Serviceview():
 		self.notebook = builder.get_object("notebook1")
 		self.portlistframe = builder.get_object("portlistframe")
 
-		self.port_liststore = Gtk.ListStore(GdkPixbuf.Pixbuf, int, str, str, str, str, str, int)
+		#creating the treeview, making it use the filter as a model, and adding the columns
+		self.treeview = ServicesTree(self.database, self.service)
+
+		scrolled = Gtk.ScrolledWindow()
+		viewport = Gtk.Viewport()
+
+		scrolled.add(viewport)
+		scrolled.set_property("height-request", 450)
+		viewport.add(self.treeview)
+		scrolled.show_all()
+
+		self.portlistframe.add(scrolled)
+
+		#self.treeview.show_all()
+		#self.portlistframe.show()
 
 		self.refresh(self.database)
-
-		#creating the treeview, making it use the filter as a model, and adding the columns
-		self.treeview = Gtk.TreeView(model=self.port_liststore)
-		for i, column_title in enumerate(["#","Port", "State", "Type", "Host", "Banner", "Fingerprint"]):
-			if i == 0:
-
-				renderer = Gtk.CellRendererPixbuf()
-				column = Gtk.TreeViewColumn(column_title, renderer, pixbuf=0)
-			else:
-				renderer = Gtk.CellRendererText()
-				column = Gtk.TreeViewColumn(column_title, renderer, text=i)
-			self.treeview.append_column(column)
-
-		self.portlistframe.add(self.treeview)
-
-		# multi selection
-		selection = self.treeview.get_selection()
-		selection.set_mode(Gtk.SelectionMode.MULTIPLE)
-
-		self.treeview.show_all()
-		self.portlistframe.show()
 
 
 	def refresh(self, db):
 
-		self.ports = self.database.get_ports_by_service(self.service)
-		self.port_liststore.clear()
-
-		for port in self.ports:
-			# fill the list
-
-			ports_list = []
-			#host = self.database.get_host_from_port(port)
-
-			if port.state == "open" and port.service != "tcpwrapped":
-				ports_list.append(iconslib.port_open_icon())
-			else:
-				ports_list.append(iconslib.port_closed_icon())
-
-			ports_list.append(port.port)
-			ports_list.append(port.state)
-			ports_list.append(port.protocol)
-			ports_list.append(port.host.address)
-			ports_list.append(port.banner) #.replace("product: ",""))
-			ports_list.append(port.fingerprint)
-			ports_list.append(port.id)
-
-			self.port_liststore.append(ports_list)
+		self.database = db
+		self.treeview.refresh(self.database, self.service)
 
 
 class Hostview():
@@ -603,7 +575,14 @@ class Hostview():
 
 		self.history_view = Historyview(self.database, self.host)
 
-		self.history_box.add(self.history_view)
+		scrolled_history = Gtk.ScrolledWindow()
+		viewport = Gtk.Viewport()
+
+		scrolled_history.add(viewport)
+		scrolled_history.set_property("height-request", 450)
+		viewport.add(self.history_view)
+
+		self.history_box.add(scrolled_history)
 		self.history_box.show_all()
 
 		# Geolocation tab
@@ -621,10 +600,15 @@ class Hostview():
 		# services
 		self.treeview = PortsTree(self.database, self.host) #Gtk.TreeView(model=self.port_liststore)
 
+		scrolled = Gtk.ScrolledWindow()
+		viewport = Gtk.Viewport()
 
-		self.portlistframe.add(self.treeview)
-		self.treeview.show_all()
-		self.portlistframe.show()
+		scrolled.add(viewport)
+		scrolled.set_property("height-request", 450)
+		viewport.add(self.treeview)
+		scrolled.show_all()
+
+		self.portlistframe.add(scrolled)
 
 		# expand buttons
 		tab_info_button          = builder.get_object("tab-info-button")
@@ -638,11 +622,13 @@ class Hostview():
 		tab_history_button       = builder.get_object("tab-history-button")
 		image5                   = builder.get_object("image5")
 
-		tab_services_button.connect("clicked", self.tab_clicked_max, "Services", self.treeview, self.portlistframe, image6)
+		tab_services_button.connect("clicked", self.tab_clicked_max, "Services", scrolled, self.portlistframe, image6)
 		tab_geoloc_button.connect("clicked", self.tab_clicked_max, "Geolocation", self.geolocation_map, self.geoloc_box, image3)
 		tab_info_button.connect("clicked", self.tab_clicked_max, "Informations", self.info_tab, self.info_loc, image2)
 		tab_notes_button.connect("clicked", self.tab_clicked_max, "Notes", self.notes_view, self.notes_place,image7)
-		tab_history_button.connect("clicked", self.tab_clicked_max, "Task's history", self.history_view, self.history_box, image5)
+		tab_history_button.connect("clicked", self.tab_clicked_max, "Task's history", scrolled_history, self.history_box, image5)
+
+		self.fullscreen = []
 		
 		self.refresh(self.database)
 
@@ -662,17 +648,19 @@ class Hostview():
 		self.geolocation_map.refresh(self.database, self.host)
 		self.info_tab.refresh(self.database, self.host)
 
-		self.info_os_short.set_text(str(self.host.os_match).split("\n")[0])
-		self.info_image.set_from_pixbuf(iconslib.get_icon(self.host.os_match,lg=True))
+		try:
+			self.info_os_short.set_text(str(self.host.os_match).split("\n")[0])
+			self.info_image.set_from_pixbuf(iconslib.get_icon(self.host.os_match,lg=True))
+		except: pass
 
 	def tab_clicked_max(self, button, name, oldobj, oldparent, image):
 		""" Fullscreen option """
-		if not oldobj.fullscreen:
+		if not oldobj in self.fullscreen:
 			oldparent.remove(oldobj)
 			self.notebook.append_page(oldobj,Gtk.Label(name))
 
 			self.notebook.set_current_page(-1)
-			oldobj.fullscreen = True
+			self.fullscreen.append(oldobj)
 
 			image =iconslib.gtk_exit_fullscreen(image)
 		else:
@@ -680,7 +668,7 @@ class Hostview():
 			self.notebook.remove_page(page_id)
 			image =iconslib.gtk_fullscreen(image)
 
-			oldobj.fullscreen = False
+			self.fullscreen.remove(oldobj)
 			oldparent.add(oldobj)
 
 
