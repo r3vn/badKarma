@@ -627,17 +627,22 @@ class Hostview():
 		self.portlistframe.show()
 
 		# expand buttons
-		self.tab_info_button     = builder.get_object("tab-info-button")
-		self.tab_services_button = builder.get_object("tab-services-button")
-		self.tab_geoloc_button   = builder.get_object("tab-geoloc-button")
-		self.tab_notes_button    = builder.get_object("tab-notes-button")
-		self.tab_history_button  = builder.get_object("tab-history-button")
+		tab_info_button          = builder.get_object("tab-info-button")
+		image2                   = builder.get_object("image2")
+		tab_services_button      = builder.get_object("tab-services-button")
+		image6                   = builder.get_object("image6")
+		tab_geoloc_button        = builder.get_object("tab-geoloc-button")
+		image3                   = builder.get_object("image3")
+		tab_notes_button         = builder.get_object("tab-notes-button")
+		image7                   = builder.get_object("image7")
+		tab_history_button       = builder.get_object("tab-history-button")
+		image5                   = builder.get_object("image5")
 
-		self.tab_services_button.connect("clicked", self.tab_clicked_max, "Services", self.treeview, self.portlistframe)
-		self.tab_geoloc_button.connect("clicked", self.tab_clicked_max, "Geolocation", self.geolocation_map, self.geoloc_box)
-		self.tab_info_button.connect("clicked", self.tab_clicked_max, "Informations", self.info_tab, self.info_loc)
-		self.tab_notes_button.connect("clicked", self.tab_clicked_max, "Notes", self.notes_view, self.notes_place)
-		self.tab_history_button.connect("clicked", self.tab_clicked_max, "Task's history", self.history_view, self.history_box)
+		tab_services_button.connect("clicked", self.tab_clicked_max, "Services", self.treeview, self.portlistframe, image6)
+		tab_geoloc_button.connect("clicked", self.tab_clicked_max, "Geolocation", self.geolocation_map, self.geoloc_box, image3)
+		tab_info_button.connect("clicked", self.tab_clicked_max, "Informations", self.info_tab, self.info_loc, image2)
+		tab_notes_button.connect("clicked", self.tab_clicked_max, "Notes", self.notes_view, self.notes_place,image7)
+		tab_history_button.connect("clicked", self.tab_clicked_max, "Task's history", self.history_view, self.history_box, image5)
 		
 		self.refresh(self.database)
 
@@ -660,7 +665,7 @@ class Hostview():
 		self.info_os_short.set_text(str(self.host.os_match).split("\n")[0])
 		self.info_image.set_from_pixbuf(iconslib.get_icon(self.host.os_match,lg=True))
 
-	def tab_clicked_max(self, button, name, oldobj, oldparent):
+	def tab_clicked_max(self, button, name, oldobj, oldparent, image):
 		""" Fullscreen option """
 		if not oldobj.fullscreen:
 			oldparent.remove(oldobj)
@@ -668,9 +673,12 @@ class Hostview():
 
 			self.notebook.set_current_page(-1)
 			oldobj.fullscreen = True
+
+			image =iconslib.gtk_exit_fullscreen(image)
 		else:
 			page_id = self.notebook.page_num(oldobj)
 			self.notebook.remove_page(page_id)
+			image =iconslib.gtk_fullscreen(image)
 
 			oldobj.fullscreen = False
 			oldparent.add(oldobj)

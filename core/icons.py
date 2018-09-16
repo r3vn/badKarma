@@ -4,6 +4,7 @@ import os
 gi.require_version('Gtk', '3.0')
 
 from gi.repository import GdkPixbuf
+from gi.repository import Gtk
 
 # OS ICONS
 def icon(typed):
@@ -22,6 +23,13 @@ def port_filtered_icon():
 
 def port_closed_icon():
 	return 	GdkPixbuf.Pixbuf.new_from_file_at_scale(filename=os.path.dirname(os.path.abspath(__file__)) + "/../assets/images/closed.gif",width=14, height=14, preserve_aspect_ratio=True)
+
+# GTK Stock icons
+def gtk_exit_fullscreen(image):
+	return image.set_from_stock(Gtk.STOCK_LEAVE_FULLSCREEN, Gtk.IconSize.LARGE_TOOLBAR)
+
+def gtk_fullscreen(image):
+	return image.set_from_stock(Gtk.STOCK_FULLSCREEN, Gtk.IconSize.LARGE_TOOLBAR)
 
 
 # get os icons based on string match
