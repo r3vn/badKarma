@@ -74,5 +74,4 @@ $ ./badkarma.py
 
 ## Donate ##
 
-<img align="right" src="https://user-images.githubusercontent.com/635790/45373809-a207d180-b5f0-11e8-9b12-20462d720b45.png">
-If you appreciated my work, you can buy me a beer. I accept Ƀitcoins to 1Dvvb3TGHRQwfLoUT8rVTPmHqgVjAJRcsm.
+If you appreciated my work, you can buy me a beer via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=SK6XQ2BKHYGH6&lc=en_XC). I also accept Ƀitcoins to 1Dvvb3TGHRQwfLoUT8rVTPmHqgVjAJRcsm.
