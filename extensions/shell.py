@@ -22,16 +22,12 @@ import configparser
 import random
 
 gi.require_version('Gtk', '3.0')
-gi.require_version('GtkSource', '3.0') 
-gi.require_version('Vte', '2.91')
 
 from gi.repository import Gtk
 from gi.repository import Gdk
-from gi.repository import Vte
-from gi.repository import GtkSource
-from gi.repository import GLib
 from gi.repository import GObject
 
+from core import widgets
 
 class karma_ext(GObject.GObject):
 
@@ -85,51 +81,20 @@ class karma_ext(GObject.GObject):
 			cmd+="\n"
 
 		scroller    = Gtk.ScrolledWindow()
-		terminal	= Vte.Terminal()
+		terminal	= widgets.Terminal()
 
-		terminal.set_scrollback_lines(-1)
 		scroller.add(terminal)
-
-		terminal.show()
 		scroller.show()
 
-		status, pid = terminal.spawn_sync(
-			Vte.PtyFlags.DEFAULT,
-			os.environ['HOME'],
-			["/bin/bash"],
-			[],
-			GLib.SpawnFlags.DO_NOT_REAP_CHILD,
-			None,
-			None,
-			)
+		status = terminal.status
+		pid = terminal.pid
 
-		# terminal.feed_child(cmd, len(cmd)) # Vte update fix
-		terminal.connect("key-press-event",self._key_press_event)
 		terminal.feed_child(cmd.encode())
 		terminal.connect("child_exited", self.task_terminated)
 
 		return scroller, pid
 
-	def _key_press_event(self, widget, event):
-		# Vte terminal key press event,
-		# allow Copy/Paste in the terminal
 
-		terminal = widget
-
-		keyval = event.keyval
-		keyval_name = Gdk.keyval_name(keyval)
-		state = event.state
-
-		ctrl = (state & Gdk.ModifierType.CONTROL_MASK)
-		shift = (state & Gdk.ModifierType.SHIFT_MASK)
-
-		if ctrl and shift and keyval_name == 'C':
-			# Ctrl+Shit+C - copy
-			terminal.copy_clipboard_format(Vte.Format.TEXT)
-
-		if ctrl and shift and keyval_name == 'V':
-			# Ctrl+Shit+V - paste
-			terminal.paste_clipboard()
 
 	def task_terminated(self, widget, two):
 
@@ -147,11 +112,10 @@ class karma_ext(GObject.GObject):
 		scrolledwindow.set_hexpand(True)
 		scrolledwindow.set_vexpand(True)
 
-		textview = GtkSource.View()
+		textview = widgets.SourceView()
 		textbuffer = textview.get_buffer()
 		textbuffer.set_text(output)
 
-		textview.set_show_line_numbers(True)
 		textview.set_editable(False)
 
 		scrolledwindow.add(textview)

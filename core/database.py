@@ -372,10 +372,10 @@ class DB:
 		self.session.add(add_host)
 		self.session.commit()
 
-	def add_log(self, pid, start_dat, end_dat, title, output, extension):
+	def add_log(self, pid, start_dat, end_dat, title, target, output, extension):
 		""" add activity log entry to the database """
 
-		log_add = activity_log( pid=pid, start_time=start_dat, end_time = end_dat, title=title, output=output, extension = extension )
+		log_add = activity_log( pid=pid, start_time=start_dat, end_time = end_dat, title=title, output=output, extension = extension, target = target )
 		self.session.add(log_add)
 		self.session.commit()
 
@@ -436,7 +436,7 @@ class DB:
 		return self.session.query(activity_log).filter( activity_log.id == int(id) ).one()
 
 	def get_history(self, host):
-		return self.session.query(activity_log).filter( activity_log.title.like("%"+host+"%")).all()
+		return self.session.query(activity_log).filter( activity_log.target.like("%"+host+"%")).all()
 
 	def get_log_id(self):
 		return self.session.query(activity_log).order_by(activity_log.id.desc()).first().id

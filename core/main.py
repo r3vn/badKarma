@@ -849,14 +849,15 @@ class Handler():
 		else:
 			task_name = ext.name
 
-		task_title = task_name+" "+host_string
+		task_title = task_name
+		task_target = host_string
 
 		if ext.log:
 			
 			if port_string != "0":
-				task_title += ":"+port_string
+				task_target += ":"+port_string
 
-			id = self.logger.add_log(pid , task_title, ext.name)
+			id = self.logger.add_log(pid , task_title, task_target, ext.name)
 			ext.connect('end_task', self.end_task, id)
 			self.outfiles[id] = output_file 
 

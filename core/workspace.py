@@ -48,20 +48,20 @@ class Logger():
 		self.log_box = builder.get_object("log-box")
 		self.scrolled = builder.get_object("scrolled")
 
-		self.log_liststore = Gtk.ListStore(int, int, str, str, int, str, int, str, int)
+		self.log_liststore = Gtk.ListStore(int, int, str, str, int, str, str, int, str, int)
 		self.log_tree = Gtk.TreeView(model=self.log_liststore)
 		self.id = 0
 
 		self.extensions  = Extensions()
 
-		for i, column_title in enumerate(["#","Status","Start time", "End time", "Pid", "Task"]):
+		for i, column_title in enumerate(["#","Status","Start time", "End time", "Pid", "Target", "Task"]):
 			if i == 1:
 
 				renderer = Gtk.CellRendererProgress()
 
 				column = Gtk.TreeViewColumn(column_title, renderer, value=1 )
 				column.set_min_width(100)
-				column.add_attribute(renderer, "pulse", 6)				#renderer.text = " "
+				column.add_attribute(renderer, "pulse", 7)				#renderer.text = " "
 			else:
 				renderer = Gtk.CellRendererText()
 				column = Gtk.TreeViewColumn(column_title, renderer, text=i)
@@ -102,7 +102,7 @@ class Logger():
 	
 		for log in logs:
 			
-			self.log_liststore.append([log.id, 0, log.start_time, log.end_time, log.pid, log.title, GObject.G_MAXINT, log.extension, i])
+			self.log_liststore.append([log.id, 0, log.start_time, log.end_time, log.pid, log.target, log.title, GObject.G_MAXINT, log.extension, i])
 			i += 1
 	
 		self.log_tree.show()
@@ -136,10 +136,10 @@ class Logger():
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()
 
-	def add_log(self, pid, title, extension):
+	def add_log(self, pid, title, target, extension):
 		""" add a task log """
 		self.id -= 1	
-		self.log_liststore.append([self.id, 0, str(datetime.datetime.now()).split(".")[0], " ", pid, title, 1, extension, len(self.log_liststore)])
+		self.log_liststore.append([self.id, 0, str(datetime.datetime.now()).split(".")[0], " ", pid, target, title, 1, extension, len(self.log_liststore)])
 		
 		return self.id
 
@@ -156,17 +156,18 @@ class Logger():
 		start_dat = row[2]
 		end_dat   = str(datetime.datetime.now()).split(".")[0]
 		pid       = row[4]
-		title     = row[5]
-		extension = row[7]
-		path      = row[8]
+		target    = row[5]
+		title     = row[6]
+		extension = row[8]
+		path      = row[9]
 
 		iter = model.get_iter(Gtk.TreePath.new_from_string(str(path)))
 
 		progress_bar = 0
 
-		id = self.database.add_log(pid, start_dat, end_dat, title, output, extension)
+		id = self.database.add_log(pid, start_dat, end_dat, title, target, output, extension)
 		self.log_liststore.set_value(iter, 0, id)
-		self.log_liststore.set_value(iter, 6, GObject.G_MAXINT)
+		self.log_liststore.set_value(iter, 7, GObject.G_MAXINT)
 		self.log_liststore.set_value(iter, 3, end_dat)
 
 
@@ -212,6 +213,7 @@ class Logger():
 			lbl_end_time   = builder.get_object("end-time-label")
 			lbl_pid        = builder.get_object("pid-label") 
 			lbl_name       = builder.get_object("extension-name-label")
+			lbl_target     = builder.get_object("extension-target-label")
 			export_button  = builder.get_object("export-button")
 			delete_button  = builder.get_object("delete-button")
 
@@ -219,6 +221,7 @@ class Logger():
 			lbl_end_time.set_text(log.end_time)
 			lbl_pid.set_text(str(log.pid))
 			lbl_name.set_text(log.extension)
+			lbl_target.set_text(log.target)
 
 			export_button.connect("clicked", self.export_log, log.id)
 			delete_button.connect("clicked", self.delete_log, log.id)
@@ -228,7 +231,7 @@ class Logger():
 
 			# box label + close button for extension
 			box_label = Gtk.Box(spacing=6)
-			box_label.add( Gtk.Label(log.title) )
+			box_label.add( Gtk.Label("%s %s" % (log.title, log.target)) )
 			close_image = Gtk.Image.new_from_icon_name( "gtk-delete", Gtk.IconSize.MENU )
 			close_button = Gtk.Button()
 			close_button.set_relief(Gtk.ReliefStyle.NONE)
@@ -561,7 +564,7 @@ class Hostview():
 
 		# info-tab
 		self.info_loc = builder.get_object("tab-info-location")
-		self.info_tab = host_informations(self.host, self.database)
+		self.info_tab = host_informations(self.database, self.host)
 
 		self.info_loc.add(self.info_tab)
 
@@ -630,7 +633,10 @@ class Hostview():
 
 		self.fullscreen = []
 		
-		self.refresh(self.database)
+		try:
+			self.info_os_short.set_text(str(self.host.os_match).split("\n")[0])
+			self.info_image.set_from_pixbuf(iconslib.get_icon(self.host.os_match,lg=True))
+		except: pass
 
 	def refresh(self, db, history = False):
 

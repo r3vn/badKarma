@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import os
 import gi
 
@@ -25,12 +24,64 @@ import core.icons as iconslib
 gi.require_version('OsmGpsMap', '1.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('GtkSource', '3.0') 
+gi.require_version('Vte', '2.91')
+gi.require_version('GtkSource', '3.0') 
 
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 from gi.repository import GtkSource
 from gi.repository import OsmGpsMap as osmgpsmap
+from gi.repository import Vte
+from gi.repository import GtkSource
+from gi.repository import GLib
+
+
+class SourceView(GtkSource.View):
+	def __init__(self, *args, **kwargs):
+		super(SourceView, self).__init__(*args, **kwargs)
+		""" GtkSource.View widget """
+		self.set_show_line_numbers(True)
+
+
+class Terminal(Vte.Terminal):
+	def __init__(self, *args, **kwargs):
+		super(Terminal, self).__init__(*args, **kwargs)
+		""" Vte terminal widget """
+
+		self.set_scrollback_lines(-1)
+
+		self.status, self.pid = self.spawn_sync(
+			Vte.PtyFlags.DEFAULT,
+			os.environ['HOME'],
+			["/bin/bash"],
+			[],
+			GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+			None,
+			None,
+			)
+
+		self.show()
+		self.connect("key-press-event", self._key_press_event)
+
+	def _key_press_event(self, widget, event):
+		# Vte terminal key press event,
+		# allow Copy/Paste in the terminal
+
+		keyval = event.keyval
+		keyval_name = Gdk.keyval_name(keyval)
+		state = event.state
+
+		ctrl = (state & Gdk.ModifierType.CONTROL_MASK)
+		shift = (state & Gdk.ModifierType.SHIFT_MASK)
+
+		if ctrl and shift and keyval_name == 'C':
+			# Ctrl+Shit+C - copy
+			self.copy_clipboard_format(Vte.Format.TEXT)
+
+		if ctrl and shift and keyval_name == 'V':
+			# Ctrl+Shit+V - paste
+			self.paste_clipboard()
 
 
 class host_informations(Gtk.ScrolledWindow):
@@ -66,13 +117,21 @@ class host_informations(Gtk.ScrolledWindow):
 		self.set_property("height-request", 450)
 		self.show_all()
 
+		self.database = database
+		self.host     = host
+
+		self.refresh(self.database, self.host)
+
 	def refresh(self, database, host):
 		# Fill info tab
 		self.host = host
 		self.database = database
 
-		self.info_os.set_text(str(host.os_match))#.split("\n")[0]
+		print(self.host)
 
+		try:
+			self.info_os.set_text(str(host.os_match))#.split("\n")[0]
+		except: pass
 
 		hostnamestring = ""
 		
@@ -128,7 +187,9 @@ class OSM(osmgpsmap.Map):
 
 		self.show()
 		self.set_property("height-request", 450)
-		#self.set_size_request(420,420)
+
+
+		self.refresh(self.database, self.host)
 
 	def refresh(self, database, host):
 		""" Refresh map """
@@ -159,11 +220,10 @@ class Historyview(Gtk.TreeView):
 
 			self.append_column(column)
 
-		#self.set_property("height-request", 450)
-
 		self.show_all()
 
-		#self.refresh(self.database)
+		self.refresh(self.database, self.host)
+
 
 	def refresh(self, database, host):
 		""" refresh history """
@@ -205,7 +265,8 @@ class ServicesTree(Gtk.TreeView):
 		selection = self.get_selection()
 		selection.set_mode(Gtk.SelectionMode.MULTIPLE)
 
-		
+		#self.refresh(self.database, self.host)
+
 
 	def refresh(self, db, service):
 
@@ -219,7 +280,6 @@ class ServicesTree(Gtk.TreeView):
 			# fill the list
 
 			ports_list = []
-			#host = self.database.get_host_from_port(port)
 
 			if port.state == "open" and port.service != "tcpwrapped":
 				ports_list.append(iconslib.port_open_icon())
@@ -258,6 +318,12 @@ class PortsTree(Gtk.TreeView):
 			self.append_column(column)
 
 		self.show_all()
+
+		self.database = database
+		self.host     = host
+
+		self.refresh(self.database, self.host)
+
 
 	def refresh(self, database, host):
 		""" Refresh services """

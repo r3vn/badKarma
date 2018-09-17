@@ -21,16 +21,14 @@ import gi
 import signal
 import configparser
 
-gi.require_version('GtkSource', '3.0') 
 gi.require_version('Gtk', '3.0')
-gi.require_version('Vte', '2.91')
 
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GtkSource
-from gi.repository import GLib
-from gi.repository import Vte
 from gi.repository import GObject
+
+from core import widgets, file_filters
 
 class karma_ext(GObject.GObject):
 	
@@ -53,11 +51,10 @@ class karma_ext(GObject.GObject):
 		scrolledwindow.set_hexpand(True)
 		scrolledwindow.set_vexpand(True)
 
-		textview = GtkSource.View()
+		textview = widgets.SourceView()
 		textbuffer = textview.get_buffer()
 		textbuffer.set_text(output)
 
-		textview.set_show_line_numbers(True)
 		textview.set_editable(False)
 
 		scrolledwindow.add(textview)
@@ -106,7 +103,7 @@ class karma_ext(GObject.GObject):
 		self.bruter_use_ssl        = builder.get_object("use-ssl")
 		self.bruter_exit_on_first  = builder.get_object("exit-on-first-good")
 
-		self.bruter_terminal = Vte.Terminal()
+		self.bruter_terminal = widgets.Terminal()
 
 		self.bruter_terminal_loc.add(self.bruter_terminal)
 
@@ -150,19 +147,9 @@ class karma_ext(GObject.GObject):
 
 		self.bruter_box.show_all()
 
-		status, self.pid = self.bruter_terminal.spawn_sync(
-				Vte.PtyFlags.DEFAULT,
-				os.environ['HOME'],
-				["/bin/bash"],
-				[],
-				GLib.SpawnFlags.DO_NOT_REAP_CHILD,
-				None,
-				None,
-
-			)
+		status = self.bruter_terminal.status
+		self.pid = self.bruter_terminal.pid
 		
-		self.bruter_terminal.set_scrollback_lines(-1)
-		self.bruter_terminal.connect("key-press-event",self._key_press_event)
 		self.bruter_terminal.connect("child_exited", self.task_terminated)
 		self.bruter_terminal.hide()
 
@@ -202,27 +189,6 @@ class karma_ext(GObject.GObject):
 		self.bruter_box.set_sensitive(False)
 
 		self.emit('end_task', str(widget.get_text_range(0,0,widget.get_cursor_position()[1] + widget.get_row_count(),10)[0]))
-
-	def _key_press_event(self, widget, event):
-		# Vte terminal key press event,
-		# allow Copy/Paste in the terminal
-
-		terminal = widget
-
-		keyval = event.keyval
-		keyval_name = Gdk.keyval_name(keyval)
-		state = event.state
-
-		ctrl = (state & Gdk.ModifierType.CONTROL_MASK)
-		shift = (state & Gdk.ModifierType.SHIFT_MASK)
-
-		if ctrl and shift and keyval_name == 'C':
-			# Ctrl+Shit+C - copy
-			terminal.copy_clipboard_format(Vte.Format.TEXT)
-
-		if ctrl and shift and keyval_name == 'V':
-			# Ctrl+Shit+V - paste
-			terminal.paste_clipboard()
 
 	def _bruter_start(self, widget):
 		# start the bruite force process
@@ -277,18 +243,13 @@ class karma_ext(GObject.GObject):
 				cmd = "proxychains "+cmd
 
 			# add the tasks
-
 			self.bruter_start.set_label("stop")
 			self.bruter_terminal.show()
-			#self.bruter_terminal.feed_child(cmd, len(cmd))	
 			self.bruter_terminal.feed_child(cmd.encode())
-			#self.bruter_terminal.connect("child_exited", self.task_terminated)
 			
 
 		else:
 			os.killpg(os.getpgid(self.pid), signal.SIGKILL)
-			#self.bruter_terminal.feed_child(signal.SIGINT, 2)	
-			#self.bruter_start.set_label("start")
 			self.bruter_start.set_sensitive(False)
 
 	def _bruter_check_user(self, widget):
@@ -309,7 +270,7 @@ class karma_ext(GObject.GObject):
 			(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
 			 Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
 
-		self.add_filters_wordlist(dialog)
+		file_filters.add_filter_txt(dialog)
 
 		response = dialog.run()
 		if response == Gtk.ResponseType.OK:
@@ -326,7 +287,7 @@ class karma_ext(GObject.GObject):
 			(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
 			 Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
 
-		self.add_filters_wordlist(dialog)
+		file_filters.add_filter_txt(dialog)
 
 		response = dialog.run()
 		if response == Gtk.ResponseType.OK:
@@ -337,13 +298,3 @@ class karma_ext(GObject.GObject):
 
 		dialog.destroy()
 
-	def add_filters_wordlist(self, dialog):
-		filter_text = Gtk.FileFilter()
-		filter_text.set_name("txt wordlsit")
-		filter_text.add_mime_type("text/plain")
-		dialog.add_filter(filter_text)
-
-		filter_any = Gtk.FileFilter()
-		filter_any.set_name("Any files")
-		filter_any.add_pattern("*")
-		dialog.add_filter(filter_any)
