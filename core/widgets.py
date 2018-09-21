@@ -16,16 +16,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 import os
 import gi
 
 import core.icons as iconslib
 
-gi.require_version('OsmGpsMap', '1.0')
-gi.require_version('Gtk', '3.0')
-gi.require_version('GtkSource', '3.0') 
-gi.require_version('Vte', '2.91')
-gi.require_version('GtkSource', '3.0') 
+try:
+	gi.require_version('OsmGpsMap', '1.0')
+	gi.require_version('Gtk', '3.0')
+	gi.require_version('GtkSource', '3.0') 
+	gi.require_version('Vte', '2.91')
+	gi.require_version('GtkSource', '3.0') 
+	gi.require_version('WebKit2', '4.0') 
+
+except:
+	print("[!] Missing dependencies, check setup instructions at readme.md")
+	sys.exit()
+
 
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -35,6 +43,34 @@ from gi.repository import OsmGpsMap as osmgpsmap
 from gi.repository import Vte
 from gi.repository import GtkSource
 from gi.repository import GLib
+from gi.repository import WebKit2
+
+class WebView(WebKit2.WebView):
+	def __init__(self, url, proxy=False, *args, **kwargs):
+		super(WebView, self).__init__(*args, **kwargs)
+
+		web_context = WebKit2.WebContext.get_default()
+		web_context.set_tls_errors_policy(WebKit2.TLSErrorsPolicy.IGNORE)
+
+		if proxy:
+			# proxy False or "http://127.0.0.1:8080"
+			web_context.set_network_proxy_settings(WebKit2.NetworkProxyMode.CUSTOM, WebKit2.NetworkProxySettings.new(proxy))
+		
+		self.set_hexpand(True)
+		GLib.timeout_add_seconds(2, self._reload)
+
+		self.load_uri(url)
+		#self.reload()
+		self.show_all()
+
+		self.load_uri(url)
+
+	def _reload(self):
+		""" workaround to avoid race condition with mitmproxy """
+
+		self.reload()
+
+
 
 
 class SourceView(GtkSource.View):
@@ -50,6 +86,7 @@ class Terminal(Vte.Terminal):
 		""" Vte terminal widget """
 
 		self.set_scrollback_lines(-1)
+		self.set_hexpand(True)
 
 		self.status, self.pid = self.spawn_sync(
 			Vte.PtyFlags.DEFAULT,
@@ -126,8 +163,6 @@ class host_informations(Gtk.ScrolledWindow):
 		# Fill info tab
 		self.host = host
 		self.database = database
-
-		print(self.host)
 
 		try:
 			self.info_os.set_text(str(host.os_match))#.split("\n")[0]

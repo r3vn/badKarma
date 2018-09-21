@@ -37,6 +37,7 @@ Extensions can be found under the "extension" directory,current available extens
  Default hydra parameters can be modified from conf/bruter.conf.
  - __Screenshot:__ this extension allow the tester to take screenshots of possibile http,rdp,rtsp,vnc and x11 servers, screenshots will be stored in the session file as base64 and can be shown from badKarma.
  - __Browser:__ just an "open in browser" for http menu item, take it as an example to build your own extensions.
+ - __WebSession:__ todo.
 
 ## Screenshots ( to update ) ##
 <p align="center">
@@ -54,7 +55,8 @@ Extensions can be found under the "extension" directory,current available extens
 ## Setup ##
 install Kali linux dependecies:
 ```bash
-# apt install python3-pip python3-gi phantomjs gir1.2-gtk-vnc-2.0 gir1.2-gtksource-3.0 gir1.2-vte-2.91 gir1.2-osmgpsmap-1.0 ffmpeg 
+# apt install python3-pip python3-gi phantomjs mitmproxy ffmpeg gir1.2-gtk-vnc-2.0 \
+gir1.2-gtksource-3.0 gir1.2-vte-2.91 gir1.2-osmgpsmap-1.0 gir1.2-webkit2-4.0 
 ```
 clone the repository:
 ```bash

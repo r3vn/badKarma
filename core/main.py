@@ -805,6 +805,7 @@ class Handler():
 					self.database.import_shodan(outfile)
 			
 				self._sync()
+				os.remove(outfile)
 			else:
 				self._sync(history = True)
 

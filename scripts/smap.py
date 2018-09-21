@@ -29,59 +29,60 @@ from shodan import Shodan
 sout = {}
 
 class shodanThread (threading.Thread):
-	def __init__(self, threadID, name, ip, verbose=False):
+	def __init__(self, threadID, name, targets, verbose=False):
 		threading.Thread.__init__(self)
 		self.threadID = threadID
 		self.name = name
-		self.ip = ip
-		self.ipinfo = ""
+		self.targets = targets
 		self.verbose = verbose
 
 	def run(self):
 
-		try:
-			self.ipinfo = api.host(self.ip)
+		for target in self.targets:
+			try:
+				ipinfo = api.host(target)
 
-			print('[+] target ip \t\t %s' % self.ip)
-			print(' ')#[-] ')
-			print('[-] os \t\t\t %s' % self.ipinfo['os'])
-			print('[-] org \t\t %s' % self.ipinfo['org'])
-			print('[-] city \t\t %s' % self.ipinfo['city'])
-			print('[-] region code \t %s' % self.ipinfo['region_code'])
-			print('[-] ISP \t\t %s' % self.ipinfo["isp"])
-			print('[-] country code \t %s' % self.ipinfo['country_code'])
-			print('[-] latitude \t\t %s' % self.ipinfo['latitude'])
-			print('[-] longitude \t\t %s' % self.ipinfo['longitude'])
+				print('[+] target ip \t\t %s' % target)
+				print(' ')#[-] ')
+				print('[-] os \t\t\t %s' % ipinfo['os'])
+				print('[-] org \t\t %s' % ipinfo['org'])
+				print('[-] city \t\t %s' % ipinfo['city'])
+				print('[-] region code \t %s' % ipinfo['region_code'])
+				print('[-] ISP \t\t %s' % ipinfo["isp"])
+				print('[-] country code \t %s' % ipinfo['country_code'])
+				print('[-] latitude \t\t %s' % ipinfo['latitude'])
+				print('[-] longitude \t\t %s' % ipinfo['longitude'])
 
-			print(' ')
-			print('[*] hostnames :')
+				print(' ')
+				print('[*] hostnames :')
 
-			for hostname in self.ipinfo["hostnames"]:
-				print("[-]\t%s" % hostname )
+				for hostname in ipinfo["hostnames"]:
+					print("[-]\t%s" % hostname )
 
-			print(' ')
-			print('[*] Ports :')
+				print(' ')
+				print('[*] Ports :')
 
-			i = 0
-			for port in self.ipinfo["ports"]:
-				print("[-]\t%s - %s" % (port, self.ipinfo["data"][i]["transport"]) )
+				i = 0
+				for port in ipinfo["ports"]:
+					print("[-]\t%s - %s" % (port, ipinfo["data"][i]["transport"]) )
 
-				i += 1
+					i += 1
 
-			print( ' ')
-
-			sout[self.ip] = self.ipinfo
-
-
-
-		except:
-			if (self.verbose):
-				print('[+] target ip \t\t %s' % self.ip)
-				print("[!] Not found.")
 				print( ' ')
 
+				sout[target] = ipinfo
 
 
+
+			except:
+				if (self.verbose):
+					print('[+] target ip \t\t %s' % target)
+					print("[!] Not found.")
+					print( ' ')
+
+
+def chunkify(lst,n):
+	return [lst[i::n] for i in range(n)]
 
 if __name__ == "__main__":
 
@@ -98,6 +99,9 @@ if __name__ == "__main__":
 
 	# verbose boolean
 	parser.add_argument('--verbose', help='Get some extra info', action="store_true")
+
+	# threads number
+	parser.add_argument('--threads', help='Threads to query shodan', default=4)
 
 	# output file name
 	parser.add_argument('--out', help='json output file path')
@@ -169,16 +173,26 @@ if __name__ == "__main__":
 		sys.exit()
 
 
+	t_num = int(args.threads)
 	threads = []
 	x = 0
 
-	for target in todo:
+	pt = chunkify(todo,t_num)
+
+	for chunk in pt:
+
 		# Create new threads
-		thread = shodanThread(x, "Thread-"+target, target, verbose = args.verbose)
+		thread = shodanThread(x, "Thread-"+str(x), chunk, verbose = args.verbose)
+		
+		if args.verbose:
+			print("[+] Starting thread "+ str(x))
+
 		# Start new Threads
 		thread.start()
 
 		threads.append(thread)
+
+		x += 1
 
 	for thread in threads:
 		# wait threads to end

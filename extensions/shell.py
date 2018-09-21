@@ -19,7 +19,6 @@
 import os
 import gi
 import configparser
-import random
 
 gi.require_version('Gtk', '3.0')
 
