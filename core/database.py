@@ -110,6 +110,30 @@ class DB:
 					return line.split()[0]
 
 
+	def import_geoplugin(self, json_file):
+		""" import host's longitude and latitude from geoplugin json """
+
+		file = open(json_file,'r')
+		sp_out = file.read()
+		file.close()
+
+		geo_out = json.loads(sp_out)
+
+		# check if the host exists
+		if self.host_exist(geo_out["geoplugin_request"]):
+			# update
+			add_host = self.session.query(targets).filter( targets.address == geo_out["geoplugin_request"] ).one()
+				
+			# update values only if there's more informations
+			
+			add_host.latitude = geo_out["geoplugin_latitude"]
+			add_host.longitude = geo_out["geoplugin_longitude"]
+
+			self.session.add(add_host)
+			self.session.commit()
+
+
+
 
 	def import_shodan(self, json_file):
 		""" import smap.py json output """
@@ -436,7 +460,7 @@ class DB:
 		return self.session.query(activity_log).filter( activity_log.id == int(id) ).one()
 
 	def get_history(self, host):
-		return self.session.query(activity_log).filter( activity_log.target.like("%"+host+"%")).all()
+		return self.session.query(activity_log).filter( activity_log.target.like("%"+host+"%") | activity_log.target.like("%"+host+"%") ).all()
 
 	def get_log_id(self):
 		return self.session.query(activity_log).order_by(activity_log.id.desc()).first().id

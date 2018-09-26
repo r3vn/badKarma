@@ -397,6 +397,10 @@ class Handler():
 			try:
 				with open(file) as f:
 					testfile = json.load(f)
+
+					if "geoplugin_request" in head:
+						return "geoplugin"
+
 					return "smap"
 			except:
 				pass
@@ -803,6 +807,10 @@ class Handler():
 				elif self.identify_scan(outfile) == "smap":
 					
 					self.database.import_shodan(outfile)
+
+				elif self.identify_scan(outfile) == "geoplugin":
+
+					self.database.import_geoplugin(outfile)
 			
 				self._sync()
 				os.remove(outfile)
