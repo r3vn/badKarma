@@ -43,8 +43,8 @@ class karma_ext(GObject.GObject):
 		""" WebSession extension """
 		GObject.GObject.__init__(self)
 
-		#self.config_file = configparser.ConfigParser()
-		#self.config_file.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/websession.conf")
+		self.config_file = configparser.ConfigParser()
+		self.config_file.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/websession.conf")
 
 		self.name = "web-session"
 		self.log = True
@@ -85,6 +85,9 @@ class karma_ext(GObject.GObject):
 
 		cmd = "mitmproxy -p %d -w %s; exit;\n" % (proxy_port, self.o_file) # --set console_focus_follow=true
 
+		if proxychains:
+			cmd = "proxychains %s" % cmd
+
 		terminal = widgets.Terminal()
 		terminal.feed_child(cmd.encode())
 
@@ -104,19 +107,74 @@ class karma_ext(GObject.GObject):
 
 		webview  = widgets.WebView(url, proxy="http://127.0.0.1:%d" % proxy_port)
 
+		webview_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+		webview_box.show()
+
+		webview_box.add(webview.toolbar)
+		webview_box.add(webview)
+
+		webview_box.set_vexpand(True)
 		scroller.set_hexpand(True)
 
 		box.pack1(scroller, False, False);
-		box.pack2(webview, True, False);
+		box.pack2(webview_box, True, False);
 
 		scroller.set_property("width-request", 480)
 
 		terminal.set_hexpand(True)
+		box.set_vexpand(True)
 		box.show_all()
 
-		terminal.connect("child_exited", self.task_terminated, box)
+		# add main window
+		builder	 = Gtk.Builder() # glade
+		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/websession.glade")
 
-		return box, pid
+		main_win         = builder.get_object('websession-main')
+		payloads_toolbar = builder.get_object('payloads-bar')
+		main_win.add(box)
+
+		
+		for payload_cat in self.config_file:
+			if payload_cat != "DEFAULT":
+				catbtn = Gtk.MenuItem(payload_cat)
+				catbtn.show()
+				subcat = Gtk.Menu()
+
+				for payload_subcat in self.config_file[payload_cat]:
+					
+
+					subcatbtn = Gtk.MenuItem(payload_subcat)
+					subcat.add(subcatbtn)
+					subcat.show_all()
+
+					payload_menu = Gtk.Menu()
+
+					for payload in self.config_file[payload_cat][payload_subcat].split("\n"):
+						
+						payloadbtn = Gtk.MenuItem(payload)
+						payload_menu.add(payloadbtn)
+
+						payload_menu.show_all()
+
+						payloadbtn.connect('activate', self.copy_payload, payload)
+
+						subcatbtn.set_submenu(payload_menu)
+					catbtn.set_submenu(subcat)
+					
+
+				payloads_toolbar.add(catbtn)
+
+		terminal.connect("child_exited", self.task_terminated, main_win)
+
+		return main_win, pid
+
+
+	def copy_payload(self, widget, payload):
+		""" Copy payload to clipboard """
+
+		clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
+		clipboard.set_text(payload, -1)
 
 
 	def task_terminated(self, widget, two, box):
@@ -124,8 +182,9 @@ class karma_ext(GObject.GObject):
 
 		box.set_sensitive(False)
 
-		cmd = "mitmdump -r %s; exit;\n" % self.o_file
+		cmd = "mitmdump -n -r %s; exit;\n" % self.o_file
 		p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+
 
 		log = p.stdout.read().decode()
 

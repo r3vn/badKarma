@@ -48,6 +48,7 @@ from gi.repository import WebKit2
 class WebView(WebKit2.WebView):
 	def __init__(self, url, proxy=False, *args, **kwargs):
 		super(WebView, self).__init__(*args, **kwargs)
+		""" WebKit2 Webview widget """
 
 		web_context = WebKit2.WebContext.get_default()
 		web_context.set_tls_errors_policy(WebKit2.TLSErrorsPolicy.IGNORE)
@@ -57,19 +58,47 @@ class WebView(WebKit2.WebView):
 			web_context.set_network_proxy_settings(WebKit2.NetworkProxyMode.CUSTOM, WebKit2.NetworkProxySettings.new(proxy))
 		
 		self.set_hexpand(True)
-		GLib.timeout_add_seconds(2, self._reload)
+		self.set_vexpand(True)
+
+		self.toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+
+		self.address_bar = Gtk.Entry()
+		self.go_button = Gtk.Button("go")
+
+		self.address_bar.set_text(url)
+
+		self.toolbar.add(self.address_bar)
+		self.toolbar.add(self.go_button)
+
+		if proxy:
+			GLib.timeout_add_seconds(2, self._reload)
+
+		self.toolbar.set_hexpand(True)
+		self.address_bar.set_hexpand(True)
 
 		self.load_uri(url)
-		#self.reload()
+		self.toolbar.show_all()
 		self.show_all()
 
 		self.load_uri(url)
+
+		self.connect("load-changed", self._load_changed)
+		self.go_button.connect("clicked", self._load_uri)
+
+	def _load_uri(self, widget):
+		""" load new uri """
+
+		self.load_uri(self.address_bar.get_text())
+
+	def _load_changed(self, widget, test):
+		""" update address bar """
+
+		self.address_bar.set_text(self.get_uri())
 
 	def _reload(self):
 		""" workaround to avoid race condition with mitmproxy """
 
 		self.reload()
-
 
 
 

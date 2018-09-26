@@ -36,7 +36,8 @@ Extensions can be found under the "extension" directory,current available extens
  - __Bruter:__ as the name says, bruter is the brute-force extension. It allow the tester to send a target directly to Hydra and configure the parameters through a GUI.
  Default hydra parameters can be modified from conf/bruter.conf.
  - __Screenshot:__ this extension allow the tester to take screenshots of possibile http,rdp,rtsp,vnc and x11 servers, screenshots will be stored in the session file as base64 and can be shown from badKarma.
- - __WebSession:__ a fast and ready to use webview in tailing with mitmproxy, it allow to browse a target's website and read, edit or resend HTTP requests. Since full dumps are too big to be imported inside the session file, only mitmdump's default ouput is imported.
+ - __WebSession:__ a fast and ready to use webview in tailing with mitmproxy, it allow to browse a target's website and read, edit or resend HTTP requests.
+ Some common payloads are available as well, just click on a payload to copy it on the clipboard. Since full dumps are too big to be imported inside the session file, only mitmdump's default ouput is imported.
  - __Browser:__ just an "open in browser" for http menu item, take it as an example to build your own extensions.
  
 
