@@ -1,8 +1,5 @@
 import os
 import importlib
-import gi
-
-from gi.repository import GObject
 
 class Extensions:
 	def __init__(self):

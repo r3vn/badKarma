@@ -424,6 +424,13 @@ class Handler():
 			for host in hosts:
 
 				self.database.remove_host(host.id)
+
+				if host == self.work.host:
+					# Remove host from the workspace
+					self._clear_workspace()
+					self.main.workspace.add(self.main.welcome_note)
+
+
 				model = self.host_list.hosttree.get_model()
 
 				for row in model:

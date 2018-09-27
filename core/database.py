@@ -460,7 +460,7 @@ class DB:
 		return self.session.query(activity_log).filter( activity_log.id == int(id) ).one()
 
 	def get_history(self, host):
-		return self.session.query(activity_log).filter( activity_log.target.like("%"+host+"%") | activity_log.target.like("%"+host+"%") ).all()
+		return self.session.query(activity_log).filter( activity_log.target.like("%"+host.address+"%") | activity_log.target.like("%"+host.hostname+"%") ).all()
 
 	def get_log_id(self):
 		return self.session.query(activity_log).order_by(activity_log.id.desc()).first().id
@@ -473,6 +473,7 @@ class DB:
 		return True
 
 	def remove_note(self, id):
+		id = int(id)
 		todel = self.session.query(notes).filter( notes.id == id ).one()
 
 		self.session.delete(todel)

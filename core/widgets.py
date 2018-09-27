@@ -296,7 +296,7 @@ class Historyview(Gtk.TreeView):
 		self.host     = host
 		self.database = database
 
-		self.history  = self.database.get_history(self.host.address)
+		self.history  = self.database.get_history(self.host)
 
 		for task in self.history:
 			self.history_liststore.append([task.id, task.start_time, task.end_time, task.pid, task.title])
@@ -616,7 +616,7 @@ class Notesview(Gtk.ScrolledWindow):
 				self.scrolledwindow.destroy()
 			except: pass
 
-			self.refresh(self.database)
+			self.refresh(self.database, self.host)
 
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()
