@@ -22,11 +22,6 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy import update
 
-from libnmap.parser import NmapParser
-from xml.etree import ElementTree
-
-import json
-
 Base = declarative_base()
 
 class targets(Base):
@@ -110,276 +105,6 @@ class DB:
 					return line.split()[0]
 
 
-	def import_geoplugin(self, json_file):
-		""" import host's longitude and latitude from geoplugin json """
-
-		file = open(json_file,'r')
-		sp_out = file.read()
-		file.close()
-
-		geo_out = json.loads(sp_out)
-
-		# check if the host exists
-		if self.host_exist(geo_out["geoplugin_request"]):
-			# update
-			add_host = self.session.query(targets).filter( targets.address == geo_out["geoplugin_request"] ).one()
-				
-			# update values only if there's more informations
-			
-			add_host.latitude = geo_out["geoplugin_latitude"]
-			add_host.longitude = geo_out["geoplugin_longitude"]
-
-			self.session.add(add_host)
-			self.session.commit()
-
-
-
-
-	def import_shodan(self, json_file):
-		""" import smap.py json output """
-
-		file = open(json_file,'r')
-		sp_out = file.read()
-		file.close()
-
-		smap_out = json.loads(sp_out)
-
-		for host in smap_out:
-			# get the os match
-
-			if smap_out[host]["os"]:
-				match = smap_out[host]["os"]
-			else:
-				match = ""
-
-			# get the first hostname
-			try:
-				hostname = smap_out[host]["hostnames"][0]
-			except:
-				hostname = ""
-
-			# check if the host is already in the db
-			if self.host_exist(host):
-				# update
-				add_host = self.session.query(targets).filter( targets.address == host ).one()
-				
-				# update values only if there's more informations
-
-				if len(hostname) > 0:
-					add_host.hostname = hostname
-				if len(match) > 0:
-					add_host.os_match = match
-				if len(add_host.status) > 0:
-					add_host.status = "up"
-				
-				add_host.latitude = smap_out[host]["latitude"]
-				add_host.longitude = smap_out[host]["longitude"]
-
-
-			else:
-				# add the host to the db
-				add_host = targets(address=host, latitude=smap_out[host]["latitude"],longitude= smap_out[host]["longitude"],hostname=hostname, os_match=match, status="up")
-			
-			# commit to db
-			self.session.add(add_host)
-			self.session.commit()
-
-			i = 0
-
-
-			for port in smap_out[host]["ports"]:
-
-				service = self._find_nmap_service(port,smap_out[host]["data"][i]["transport"])
-
-				if self.port_exist(add_host.id, port, smap_out[host]["data"][i]["transport"]):
-					# update the existing port
-					add_port = self.session.query(services).filter( services.host_id == add_host.id, services.port == port, services.protocol == smap_out[host]["data"][i]["transport"] ).one()
-
-					if len(service) > 0:
-						add_port.service = service
-
-
-
-				else:
-					# add the new port
-					add_port = services(port=port, protocol=smap_out[host]["data"][i]["transport"], service=service, fingerprint="", state="open", banner="", host = add_host)
-
-				# commit to db
-				self.session.add(add_port)
-
-				i += 1
-
-		self.session.commit()
-
-
-
-
-	def import_masscan(self, xml):
-		""" import masscan xml output """
-
-		dom = ElementTree.parse(xml)
-		scan = dom.findall('host')
-		out = {}
-		add_host = ""
-
-		for s in scan:
-			addr = s.getchildren()[0].items()[0][1]
-			port = s.getchildren()[1].getchildren()[0].items()[1][1]
-
-			try:
-				service = s.getchildren()[1].getchildren()[0].getchildren()[1].items()[0][1]
-			except: 
-				service = ""
-			try:
-				banner = s.getchildren()[1].getchildren()[0].getchildren()[1].items()[1][1]
-			except: 
-				banner = ""
-			try:
-				port_state =  s.getchildren()[1].getchildren()[0].getchildren()[0].items()[0][1]
-			except:
-				port_state = ""
-
-			try:
-				proto = s.getchildren()[1].getchildren()[0].items()[0][1]
-			except: 
-				proto= ""
-
-
-			if addr in out:
-				if service != "title" and service != "":
-
-					if self.port_exist(add_host.id, port, proto):
-						# update the existing port
-						add_port = self.session.query(services).filter( services.host_id == add_host.id, services.port == port, services.protocol == proto ).one()
-
-						if len(service) > 0:
-							add_port.service = service
-						#if len(service.servicefp) > 0:
-						#	add_port.fingerprint = str(service.servicefp)
-
-						if len(port_state) > 0:
-							add_port.state = port_state
-						if len(banner) > 0:
-							add_port.banner = banner
-
-					else:
-						# add the new port
-						add_port = services(port=port, protocol=proto, service=service, fingerprint=banner, state=port_state, banner="", host = out[addr])
-
-						# commit to db
-						self.session.add(add_port)
-
-			else:
-				if self.host_exist(addr):
-
-					add_host = self.session.query(targets).filter( targets.address == addr ).one()
-
-				else:
-					# add the host to the db
-					add_host = targets(address=addr, status="up")
-					
-					# commit to db
-					self.session.add(add_host)
-
-				out[addr] = add_host
-
-			self.session.commit()
-			
-
-
-	def import_nmap(self, xml):
-		""" import an nmap xml output """
-
-		report = NmapParser.parse_fromfile(xml)
-
-		for host in report.hosts:
-			# get os accuracy
-			try:
-				accuracy = str(host.os_class_probabilities()[0])
-			except:
-				accuracy = ""
-
-			# get the os match
-			try:
-				match = str(host.os_match_probabilities()[0])
-			except:
-				match = ""
-
-			# get the first hostname
-			try:
-				hostname = host.hostnames[0]
-			except:
-				hostname = ""
-
-			# check if the host is already in the db
-			if self.host_exist(host.address):
-				# update
-				add_host = self.session.query(targets).filter( targets.address == host.address ).one()
-				
-				# update values only if there's more informations
-				if len(str(host.scripts_results)) > 3:
-					add_host.scripts = str(host.scripts_results)
-				if len(hostname) > 0:
-					add_host.hostname = hostname
-				if len(match) > 0:
-					add_host.os_match = match
-				if len(accuracy) >0:
-					add_host.os_accuracy = accuracy
-				if len(host.ipv4) > 0:
-					add_host.ipv4 = host.ipv4
-				if len(host.ipv6) > 0:
-					add_host.ipv6 = host.ipv6
-				if len(host.mac) > 0:
-					add_host.mac = host.mac
-				if len(host.status) > 0:
-					add_host.status = host.status
-				if len(host.tcpsequence) > 0:
-					add_host.tcpsequence = host.tcpsequence
-				if len(host.vendor) > 0:
-					add_host.vendor = host.vendor
-				if len(str(host.uptime)) > 0:
-					add_host.uptime = host.uptime
-				if len(str(host.lastboot)) > 0:
-					add_host.lastboot = host.lastboot
-				if len(str(host.distance)) > 0:
-					add_host.distance = host.distance
-
-			else:
-				# add the host to the db
-				add_host = targets(address=host.address,scripts=str(host.scripts_results), hostname=hostname, os_match=match, os_accuracy=accuracy, ipv4=host.ipv4, ipv6=host.ipv6, mac=host.mac, status=host.status, tcpsequence=host.tcpsequence, vendor=host.vendor, uptime=host.uptime, lastboot=host.lastboot, distance=host.distance)
-			
-			# commit to db
-			self.session.add(add_host)
-			self.session.commit()
-
-			for port in host.get_ports():
-
-				service = host.get_service(port[0],port[1])
-
-				if self.port_exist(add_host.id, port[0], port[1]):
-					# update the existing port
-					add_port = self.session.query(services).filter( services.host_id == add_host.id, services.port == port[0], services.protocol == port[1] ).one()
-
-					if len(service.service) > 0:
-						add_port.service = service.service
-					if len(service.servicefp) > 0:
-						add_port.fingerprint = str(service.servicefp)
-					#print(service.servicefp)
-
-					if len(service.state) > 0:
-						add_port.state = service.state
-					if len(service.banner) > 0:
-						add_port.banner = service.banner
-
-				else:
-					# add the new port
-					add_port = services(port=port[0], protocol=port[1], service=service.service, fingerprint=service.servicefp, state=service.state, banner=service.banner, host = add_host)
-
-				# commit to db
-				self.session.add(add_port)
-
-		self.session.commit()
-
 	def add_note(self, host_id, title, text):
 		""" add a note """
 		add_note = notes(host_id=host_id, title=title, text=text)
@@ -460,7 +185,11 @@ class DB:
 		return self.session.query(activity_log).filter( activity_log.id == int(id) ).one()
 
 	def get_history(self, host):
-		return self.session.query(activity_log).filter( activity_log.target.like("%"+host.address+"%") | activity_log.target.like("%"+host.hostname+"%") ).all()
+		try:
+			return self.session.query(activity_log).filter( activity_log.target.like("%"+host.address+"%") | activity_log.target.like("%"+host.hostname+"%") ).all()
+		except:
+			return self.session.query(activity_log).filter( activity_log.target.like("%"+host.address+"%")).all()
+
 
 	def get_log_id(self):
 		return self.session.query(activity_log).order_by(activity_log.id.desc()).first().id
@@ -493,5 +222,14 @@ class DB:
 
 		self.session.commit()
 
+
+		return True
+
+
+	def rename_note(self, id, newname):
+		toren = self.session.query(notes).filter( notes.id == id ).one()
+		toren.title = newname
+
+		self.session.commit()
 
 		return True

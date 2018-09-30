@@ -24,12 +24,15 @@ import random
 import json
 import string
 
-gi.require_version('Gtk', '3.0')
+try:
+	gi.require_version('Gtk', '3.0')
+except:
+	print("[!] Gtk 3 Missing?")
 
 from gi.repository import Gtk
 
 from core.workspace import *
-from core.extensions import Extensions
+from core.extensions import Extensions, Importers
 from core.addtargets import Targetadd
 from core.database import DB
 
@@ -57,6 +60,7 @@ class Handler():
 
 		self.database    = database
 		self.extensions  = Extensions() # extension engine
+		self.ext_session = Importers(self.database) # session extension engine
 
 		self.on_services_view = False
 
@@ -361,51 +365,24 @@ class Handler():
 		if response == Gtk.ResponseType.OK:
 			file_selected = dialog.get_filename()
 
-			try:
-				if self.identify_scan(file_selected) == "nmap":
-					self.database.import_nmap(file_selected)
+			with open(file_selected) as myfile:
+				head = "".join(myfile.readlines()[0:5]).replace('\n','')
 
-				elif self.identify_scan(file_selected) == "masscan":
-					self.database.import_masscan(file_selected)
+				for extension in self.ext_session.modules:
+					if self.ext_session.modules[extension]["module"].match(head):
+						try:
+							self.ext_session.modules[extension]["module"].parse(file_selected)
+						except Exception as E:
+							print(self.ext_session.modules[extension]["module"].name)
+							print("---")
+							print(E)
 
-				elif self.identify_scan(file_selected) == "smap":
-					self.database.import_shodan(file_selected)
-
-			except Exception as e: 
-				print (e)
 			
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.destroy()
 
 		dialog.destroy()
 		self._sync()
-
-
-	def identify_scan(self, file) :
-		""" identify scanner to import the results """
-
-		with open(file) as myfile:
-			head = "".join(myfile.readlines()[0:5]).replace('\n','')
-
-		if "masscan" in head.lower():
-			return "masscan"
-
-		elif "nmap" in head.lower():
-			return "nmap"
-
-		else:
-			try:
-				with open(file) as f:
-					testfile = json.load(f)
-
-					if "geoplugin_request" in head:
-						return "geoplugin"
-
-					return "smap"
-			except:
-				pass
-
-
 
 
 	def _delete_host(self, widget, hosts):
@@ -804,20 +781,18 @@ class Handler():
 			outfile = self.outfiles[id]
 
 			if os.path.exists(outfile):
-				if self.identify_scan(outfile) == "nmap":
-					# import the nmap xml and refresh the ui
-					self.database.import_nmap(outfile)
+				with open(outfile) as myfile:
+					head = "".join(myfile.readlines()[0:5]).replace('\n','')
 
-				elif self.identify_scan(outfile) == "masscan":
-					self.database.import_masscan(outfile)
+					for extension in self.ext_session.modules:
+						if self.ext_session.modules[extension]["module"].match(head):
+							try:
+								self.ext_session.modules[extension]["module"].parse(outfile)
+							except Exception as E:
+								print(self.ext_session.modules[extension]["module"].name)
+								print("---")
+								print(E)
 
-				elif self.identify_scan(outfile) == "smap":
-					
-					self.database.import_shodan(outfile)
-
-				elif self.identify_scan(outfile) == "geoplugin":
-
-					self.database.import_geoplugin(outfile)
 			
 				self._sync()
 				os.remove(outfile)

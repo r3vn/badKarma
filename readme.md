@@ -31,7 +31,10 @@ By default all the scan output are stored inside the "/tmp" directory , then the
 ## Extensions ##
 badKarma is modular, the extensions are full-interactive and they allow the penetration tester to tune tasks options, since output is logged under the session file, their output can be exported as a raw txt from the "Logs" tab. 
 
-Extensions can be found under the "extension" directory,current available extensions are: 
+Extensions can be found under the "extension" directory, they are sorted in two categories: importers and workspace.
+Importers extensions aim to identify tools output files, parse them and import the results into the session file.
+
+Current available workspace's extensions are: 
  - __Shell:__ this is the main module of the toolkit since it allow the tester to execute preconfigured shell tasks. Shell commands are located under the "conf" directory.
  - __Bruter:__ as the name says, bruter is the brute-force extension. It allow the tester to send a target directly to Hydra and configure the parameters through a GUI.
  Default hydra parameters can be modified from conf/bruter.conf.

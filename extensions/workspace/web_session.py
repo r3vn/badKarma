@@ -44,7 +44,7 @@ class karma_ext(GObject.GObject):
 		GObject.GObject.__init__(self)
 
 		self.config_file = configparser.ConfigParser()
-		self.config_file.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/websession.conf")
+		self.config_file.read(os.path.dirname(os.path.abspath(__file__)) + "/../../conf/websession.conf")
 
 		self.name = "web-session"
 		self.log = True

@@ -1,6 +1,38 @@
 import os
 import importlib
 
+class Importers:
+	def __init__(self, database):
+		""" Session's extensions engine """
+
+		self.modules = {}
+
+		self._indicize_modules(database)
+
+	def _indicize_modules(self, database):
+		for dirpath, dirnames, filenames in os.walk(os.path.dirname(os.path.abspath(__file__))+"/../extensions/importers/"):
+			for filename in [f for f in filenames if f.endswith(".py")]:
+				if filename not in ["__init__.py","__pycache__"]:
+					module_name = str(os.path.join(dirpath, filename).replace(".py","").replace(os.path.dirname(os.path.abspath(__file__))+"/../extensions/importers/","") )
+					module = importlib.import_module('extensions.importers.'+module_name)
+					module = module.karma_ext(database)
+
+					try:
+						# check if the module have a menu option
+						self.menus[module] = module.menu
+
+					except: pass
+
+					self.modules[module.name] = { 
+											"path"   : 'extensions.importers.'+module_name,
+											"module" : module
+										 }
+
+		return True
+
+
+
+
 class Extensions:
 	def __init__(self):
 		# initialize extensions
@@ -52,11 +84,11 @@ class Extensions:
 	def _indicize_modules(self):
 		""" initialize post modules """
 
-		for dirpath, dirnames, filenames in os.walk(os.path.dirname(os.path.abspath(__file__))+"/../extensions/"):
+		for dirpath, dirnames, filenames in os.walk(os.path.dirname(os.path.abspath(__file__))+"/../extensions/workspace/"):
 			for filename in [f for f in filenames if f.endswith(".py")]:
 				if filename not in ["__init__.py","__pycache__"]:
-					module_name = str(os.path.join(dirpath, filename).replace(".py","").replace(os.path.dirname(os.path.abspath(__file__))+"/../extensions/","") )
-					module = importlib.import_module('extensions.'+module_name)
+					module_name = str(os.path.join(dirpath, filename).replace(".py","").replace(os.path.dirname(os.path.abspath(__file__))+"/../extensions/workspace/","") )
+					module = importlib.import_module('extensions.workspace.'+module_name)
 					module = module.karma_ext()
 
 					try:
@@ -66,7 +98,7 @@ class Extensions:
 					except: pass
 
 					self.modules[module.name] = { 
-											"path"   : 'extensions.'+module_name,
+											"path"   : 'extensions.workspace.'+module_name,
 											"module" : module
 										 }
 

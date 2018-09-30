@@ -429,9 +429,10 @@ class Notesview(Gtk.ScrolledWindow):
 		builder = Gtk.Builder()
 		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/widgets.glade")
 
-		self.notes_view   = builder.get_object("notes-view")
-		self.notes_treepl = builder.get_object("notes-treepl")
-		self.add_button   = builder.get_object("add-button")
+		self.notes_view        = builder.get_object("notes-view")
+		self.notes_treepl      = builder.get_object("notes-treepl")
+		self.add_button        = builder.get_object("add-button")
+
 
 		self.database = database
 		self.host     = host
@@ -507,7 +508,7 @@ class Notesview(Gtk.ScrolledWindow):
 			i2 = Gtk.MenuItem("rename")
 
 			i1.connect("activate", self.delete_note, note_selected)
-			i2.connect("activate", self.rename_note, path)
+			i2.connect("activate", self.rename_note, note_selected)
 
 				
 			self.rightclickmenu.append(i1)
@@ -593,9 +594,39 @@ class Notesview(Gtk.ScrolledWindow):
 
 		self.database.save_note(id, text)
 
-	def rename_note(self, widget, cell):
-		#cell.set_property("editable", True)
-		""" todo """
+	def rename_note(self, widget, note_selected):
+		""" rename a note """
+
+		builder = Gtk.Builder()
+		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/widgets.glade")
+
+		self.rename_note_input = builder.get_object("rename-note-input")
+		self.rename_note_win   = builder.get_object("rename-note")
+		self.rename_note_save  = builder.get_object("rename-note-save")
+		self.rename_note_canc  = builder.get_object("rename-note-canc")
+
+
+		for idz in note_selected:
+			self.rename_note_win.show()
+			self.rename_note_win.set_title("rename note")
+
+			self.rename_note_canc.connect('clicked', self._destroy_rename_note)
+			self.rename_note_save.connect('clicked', self._save_rename_note, idz)
+
+	def _destroy_rename_note(self, widget):
+		""" destroy and get a new rename_note window """
+		self.rename_note_win.destroy()
+
+
+	def _save_rename_note(self, widget, id):
+		""" rename note  """
+		newname = self.rename_note_input.get_text()
+		self.database.rename_note(id,newname)
+
+		self.rename_note_win.destroy()
+
+		self.refresh(self.database, self.host)
+			
 
 	def delete_note(self, widget, note_selected):
 		# delete a note from the db

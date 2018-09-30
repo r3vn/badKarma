@@ -79,7 +79,7 @@ class karma_ext(GObject.GObject):
 
 
 		builder	 = Gtk.Builder() # glade
-		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/bruter.glade")
+		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../../assets/ui/bruter.glade")
 
 		self.running = False
 		self.bruter_box = builder.get_object("bruter-box")
