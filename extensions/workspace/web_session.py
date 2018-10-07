@@ -127,7 +127,7 @@ class karma_ext(GObject.GObject):
 
 		# add main window
 		builder	 = Gtk.Builder() # glade
-		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/websession.glade")
+		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../../assets/ui/websession.glade")
 
 		main_win         = builder.get_object('websession-main')
 		payloads_toolbar = builder.get_object('payloads-bar')
