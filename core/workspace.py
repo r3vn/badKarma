@@ -88,7 +88,7 @@ class Logger():
 
 	def _scroll(self, widget, event, data=None):
 		# auto scroll
-		adj = self.scrolled.get_vadjustment()
+		adj = self.log_box.get_vadjustment()
 		adj.set_value( adj.get_upper() - adj.get_page_size() )
 
 

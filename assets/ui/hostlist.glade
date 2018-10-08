@@ -22,7 +22,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkScrolledWindow">
+      <object class="GtkScrolledWindow" id="hostlist">
         <property name="width_request">250</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
@@ -30,14 +30,7 @@
         <property name="shadow_type">in</property>
         <property name="max_content_height">100</property>
         <child>
-          <object class="GtkViewport" id="hostlist">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="margin_bottom">10</property>
-            <child>
-              <placeholder/>
-            </child>
-          </object>
+          <placeholder/>
         </child>
       </object>
       <packing>
