@@ -55,7 +55,8 @@ class Handler():
 								"host"    : "",
 								"port"    : "",
 								"domain"  : "",
-								"service" : ""
+								"service" : "",
+								"banner"  : "",
 							} 
 
 		self.database    = database
@@ -499,14 +500,15 @@ class Handler():
 
 
 	def run_multi_extra(self, widget, targets,  ext, service):
-		""" take a screenshot on multiple targets """
+		""" run extension against multiple targets """
 
 		for serv in targets:
 
 			try:
 				# target is a port
-				self._selected_opt["host"] = serv.host.address
-				self._selected_opt["port"] = serv.port
+				self._selected_opt["host"]   = serv.host.address
+				self._selected_opt["port"]   = serv.port
+				self._selected_opt["banner"] = serv.banner
 			except:
 				# target is a host
 				self._selected_opt["host"] = serv.address
@@ -808,8 +810,9 @@ class Handler():
 		""" run a python extension """
 
 		# get target strings
-		port_string = str(self._selected_opt["port"])
-		host_string = self._selected_opt["host"]
+		port_string   = str(self._selected_opt["port"])
+		host_string   = self._selected_opt["host"]
+		banner_string = self._selected_opt["banner"]
 
 		# set the output_file location string
 		output_file = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8)) 
@@ -824,6 +827,7 @@ class Handler():
 				"menu-sel"      : widget.get_label(), 
 				"service"       : service, 
 				"domain"        : self._selected_opt["domain"],
+				"banner"        : self._selected_opt["banner"],
 				"outfile"       : output_file,
 				"path_config"   : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../conf"),
 				"path_script"   : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../scripts"),

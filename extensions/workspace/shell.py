@@ -57,6 +57,7 @@ class karma_ext(GObject.GObject):
 		auto_exec    = config["autoexec"]
 		rhost        = config["rhost"]
 		rport        = config["rport"]
+		banner       = config["banner"]
 		output_file  = config["outfile"]
 		path_config  = config["path_config"]
 		path_script  = config["path_script"]
@@ -66,6 +67,7 @@ class karma_ext(GObject.GObject):
 		cmd = cmd.replace('$domain', config["domain"])
 		cmd = cmd.replace('$wordlists', config["path_wordlist"])
 		cmd = cmd.replace('$scripts', config["path_script"])
+		cmd = cmd.replace('$banner', config["banner"])
 
 		if "$outfile" in cmd:
 			# set the output_file location string
