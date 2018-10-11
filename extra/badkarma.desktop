@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=badKarma
+Comment=Advanced network reconnaissance toolkit
+Icon=badkarma
+Exec=badkarma
+Terminal=false
+Type=Application
+Categories=Network;

@@ -71,7 +71,10 @@ setup(
 		"core",
 		"extensions",
 	],
-	data_files= \
+	data_files= [
+			("/usr/share/applications", ["extra/badkarma.desktop"]),
+		] + \
+		asset_walk("extra/hicolor", "/usr/share/icons", root_replace="hicolor") + \
 		asset_walk("assets", "/usr/share/badkarma") + \
 		asset_walk("conf", "/usr/share/badkarma") + \
 		asset_walk("scripts", "/usr/share/badkarma") + \
