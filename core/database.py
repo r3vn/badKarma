@@ -186,9 +186,9 @@ class DB:
 
 	def get_history(self, host):
 		try:
-			return self.session.query(activity_log).filter( activity_log.target.like("%"+host.address+"%") | activity_log.target.like("%"+host.hostname+"%") ).all()
+			return self.session.query(activity_log).filter( activity_log.target == host.address | activity_log.target == host.hostname ).all()
 		except:
-			return self.session.query(activity_log).filter( activity_log.target.like("%"+host.address+"%")).all()
+			return self.session.query(activity_log).filter( activity_log.target == host.address ).all()
 
 
 	def get_log_id(self):
