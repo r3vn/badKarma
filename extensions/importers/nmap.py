@@ -19,6 +19,8 @@
 from core.database import *
 from libnmap.parser import NmapParser
 
+import re
+
 class karma_ext():
 
 	def __init__(self, database):
@@ -67,7 +69,10 @@ class karma_ext():
 				if len(str(host.scripts_results)) > 3:
 					add_host.scripts = str(host.scripts_results)
 				if len(hostname) > 0:
-					add_host.hostname = hostname
+					if not hostname in add_host.hostname:
+						# add multiple hostnames
+						add_host.hostname = add_host.hostname + hostname + " "
+
 				if len(match) > 0:
 					add_host.os_match = match
 				if len(accuracy) >0:
@@ -116,7 +121,10 @@ class karma_ext():
 					if len(service.state) > 0:
 						add_port.state = service.state
 					if len(service.banner) > 0:
-						add_port.banner = service.banner
+						#print(service.banner)
+						nb = re.sub(r'[A-z]+?:\s','', service.banner)
+
+						add_port.banner = nb
 
 				else:
 					# add the new port

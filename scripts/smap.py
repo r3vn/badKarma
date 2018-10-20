@@ -101,7 +101,7 @@ if __name__ == "__main__":
 	parser.add_argument('--verbose', help='Get some extra info', action="store_true")
 
 	# threads number
-	parser.add_argument('--threads', help='Threads to query shodan', default=4)
+	parser.add_argument('--threads', help='Threads to query shodan', default=2)
 
 	# output file name
 	parser.add_argument('--out', help='json output file path')

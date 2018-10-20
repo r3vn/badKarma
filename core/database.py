@@ -186,7 +186,7 @@ class DB:
 
 	def get_history(self, host):
 		try:
-			return self.session.query(activity_log).filter( activity_log.target == host.address | activity_log.target == host.hostname ).all()
+			return self.session.query(activity_log).filter( activity_log.target.contains(host.address) | activity_log.target.contains(host.hostname.split(" ")[1]) ).all() # split FIXME
 		except:
 			return self.session.query(activity_log).filter( activity_log.target == host.address ).all()
 

@@ -479,7 +479,7 @@ class Hostlist():
 				icon = iconslib.icon("unknown")
 
 			try:
-				self.host_liststore.append([icon, host.address, host.hostname, status, host.id])
+				self.host_liststore.append([icon, host.address, host.hostname.split(" ")[0], status, host.id])
 			except:
 				self.host_liststore.append([icon, host.address, "", status, host.id])
 

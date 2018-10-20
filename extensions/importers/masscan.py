@@ -149,7 +149,7 @@ class karma_ext():
 							add_port.service = port["service"]["name"]
 
 						if len(port["service"]["banner"]) > 0:
-							add_port.banner = banner
+							add_port.fingerprint = banner
 
 
 					except:
