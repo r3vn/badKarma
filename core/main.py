@@ -84,6 +84,7 @@ class Handler():
 
 		# preferences 
 		self.main.view_logs.connect("toggled", self._showhide_logs)
+		self.main.out_of_scope.connect("toggled", self._showhide_scope)
 
 		# initialization
 		# workspace & hostlist
@@ -168,7 +169,7 @@ class Handler():
 			self.scenes["hosts_view"][host].refresh(self.database)
 
 		for service in self.scenes["services_view"]:
-			self.scenes["services_view"][service].refresh(self.database)
+			self.scenes["services_view"][service].refresh(self.database, view_out_scope = self.main.out_of_scope.get_active())
 
 	def _clear_workspace(self):
 		""" 
@@ -239,6 +240,23 @@ class Handler():
 		try:
 			self.rightclickmenu.destroy()
 		except: pass
+
+	def _scope(self, widget, add, targets):
+		""" add / remove host scope """
+
+		for host_obj in targets:
+			self.database.switch_scope(add, host_obj)
+
+		self._sync()
+
+
+	def _showhide_scope(self, widget):
+		""" show / hide out-of-scope targets """
+		self.host_list.toggle_scope()
+		self.services_list.toggle_scope()
+
+		self._sync() #reset=True)
+
 
 	def _showhide_logs(self, widget):
 		""" show / hide logs notebook """
@@ -444,7 +462,7 @@ class Handler():
 				self._selected_opt["service"] = selected_service 
 
 			# generate the scene
-			self.services_view = Serviceview(selected_service, self.database)
+			self.services_view = Serviceview(selected_service, self.database, view_out_scope=self.main.out_of_scope.get_active())
 			self.scenes["services_view"][str(cell)] = self.services_view
 
 		# add the scene
@@ -475,7 +493,7 @@ class Handler():
 		for path in pathlist :
 
 			tree_iter = model.get_iter(path)
-			host_id = model.get_value(tree_iter,4) # selected host address
+			host_id = model.get_value(tree_iter,5) # selected host address
 
 			if str(host_id) in self.scenes["hosts_view"]:
 				# check if the scene was already loaded
@@ -542,41 +560,77 @@ class Handler():
 					return False 
 
 				for path in pathlist :
+					# Fill target's array
+
 					tree_iter = model.get_iter(path)
 
 					if self.on_services_view:
 
 						service = self._filter_service(model.get_value(tree_iter,0)) # selected service
+						# set shell conf section from user selection
+						extra_name = service
 
 						for port in self.database.get_ports_by_service(service):
 							targets.append(port)
 
 					else:
-						#print("provone")
+
 						address = model.get_value(tree_iter,1) # selected host address
 						domain = model.get_value(tree_iter,2) # selected host address
-						host_id = model.get_value(tree_iter,4)
+						host_id = model.get_value(tree_iter,5)
 
-						targets.append(self.database.get_host(host_id))
+						host_obj = self.database.get_host(host_id)
+
+						targets.append(host_obj)
 
 						self._selected_opt["host"] = address
 						self._selected_opt["domain"] = domain
 						self._selected_opt["port"] = 0
 
-				if self.on_services_view:
-					extra_name = service
+						# set hosts generic shell conf section
+						extra_name = "hostlist"
+
+				# Delete host option
+				i4 = Gtk.MenuItem("Delete")
+				i4.show()
+
+				self.rightclickmenu.append(i4)
+				i4.connect("activate", self._delete_host, targets)
+
+				if len(targets) > 1:
+					# multiple hosts selected
+					# we will add both remove and add to scope options
+					i5 = Gtk.MenuItem("Remove Scope")
+					i6 = Gtk.MenuItem("Add Scope")
+
+					i5.show()
+					i6.show()
+
+					self.rightclickmenu.append(i5)
+					self.rightclickmenu.append(i6)
+
+					i5.connect("activate", self._scope, False, targets) # True means Add
+					i6.connect("activate", self._scope, True, targets) # False means remove
 
 				else:
-					i4 = Gtk.MenuItem("Delete")
-					i4.show()
+					# single host selected
+					# check if the host in scope and add only one option
 
-					self.rightclickmenu.append(i4)
-					i4.connect("activate", self._delete_host, targets)
+					if host_obj.scope:
+						# in scope
+						i5 = Gtk.MenuItem("Remove Scope")
+						i5.connect("activate", self._scope, False, targets) # False means remove
 
-					extra_name = "hostlist"
+					else:
+						# Out of scope item
+						i5 = Gtk.MenuItem("Add Scope")
+						i5.connect("activate", self._scope, True, targets) # True means Add
+					
+					i5.show()
+					self.rightclickmenu.append(i5)
+									
 
 				extra = self.extensions.get_extra(extra_name)
-
 
 				for c_ext in extra:
 					tabs = {}

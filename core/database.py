@@ -44,6 +44,7 @@ class targets(Base):
 	latitude      = Column(Float, nullable=True)
 	longitude     = Column(Float, nullable=True)
 	scripts       = Column(Text, nullable=True)
+	scope         = Column(Boolean, default=False)
 
 class services(Base):
 	__tablename__ = "services"
@@ -104,6 +105,12 @@ class DB:
 
 					return line.split()[0]
 
+	def switch_scope(self, value, host):
+		""" Switch hosts scope state """
+
+		host.scope = value
+		self.session.add(host)
+		self.session.commit()
 
 	def add_note(self, host_id, title, text):
 		""" add a note """
@@ -168,11 +175,16 @@ class DB:
 	def get_service(self, id):
 		return self.session.query(services).filter( services.service == id ).all()
 
-	def get_services_uniq(self):
-		return self.session.query(services.service).distinct()
+	def get_services_uniq(self, scope=True):
 
-	def get_ports_by_service(self, service):
-		return self.session.query(services).filter( services.service == service ).all()
+		if scope: return self.session.query(services.service).distinct()
+		else: return self.session.query(services.service).filter( services.host.has( scope = True ) ).distinct()
+
+	def get_ports_by_service(self, service, scope=True):
+
+		if scope: return self.session.query(services).filter( services.service == service ).all()
+		else: return self.session.query(services).filter( services.host.has( scope = True ) ).filter( services.service == service ).all()
+
 
 	def get_ports_by_host(self, host):
 		return self.session.query(services).filter( services.host == host ).all()

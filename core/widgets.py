@@ -332,12 +332,12 @@ class ServicesTree(Gtk.TreeView):
 		#self.refresh(self.database, self.host)
 
 
-	def refresh(self, db, service):
+	def refresh(self, db, service, scope=True):
 
 		self.database = db
 		self.service = service
 
-		self.ports = self.database.get_ports_by_service(self.service)
+		self.ports = self.database.get_ports_by_service(self.service, scope=scope)
 		self.port_liststore.clear()
 
 		for port in self.ports:

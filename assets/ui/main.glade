@@ -6,7 +6,65 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-new</property>
-    <property name="icon_size">3</property>
+  </object>
+  <object class="GtkImage" id="love-img">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">../images/love.png</property>
+  </object>
+  <object class="GtkAboutDialog" id="about-window">
+    <property name="can_focus">False</property>
+    <property name="type_hint">dialog</property>
+    <property name="program_name">badKarma</property>
+    <property name="version">current</property>
+    <property name="copyright" translatable="yes">(c) 2018-2019 xfiltrated.com</property>
+    <property name="comments" translatable="yes">Advanced Network Reconnaissance Toolkit</property>
+    <property name="website">https://badkarma.xfiltrated.com</property>
+    <property name="authors">Giuseppe `r3vn` Corti</property>
+    <property name="logo">../images/icon.png</property>
+    <property name="license_type">gpl-3-0</property>
+    <child>
+      <placeholder/>
+    </child>
+    <child internal-child="vbox">
+      <object class="GtkBox">
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox">
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="donate-button">
+                <property name="label" translatable="yes">Donate</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="image">love-img</property>
+                <property name="always_show_image">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+      </object>
+    </child>
   </object>
   <object class="GtkPopoverMenu" id="popovermenu2">
     <property name="can_focus">False</property>
@@ -21,8 +79,6 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="halign">start</property>
-            <property name="hexpand">True</property>
             <property name="relief">none</property>
           </object>
           <packing>
@@ -32,9 +88,12 @@
           </packing>
         </child>
         <child>
-          <object class="GtkSeparator">
+          <object class="GtkButton" id="file_import">
+            <property name="label" translatable="yes">Import scan</property>
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="relief">none</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -43,14 +102,9 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="file_import">
-            <property name="label" translatable="yes">Import scan</property>
+          <object class="GtkSeparator">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="halign">start</property>
-            <property name="hexpand">True</property>
-            <property name="relief">none</property>
+            <property name="can_focus">False</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -59,27 +113,29 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
-        </child>
-        <child>
-          <object class="GtkSeparator">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">4</property>
-          </packing>
-        </child>
-        <child>
           <object class="GtkButton" id="file_open">
             <property name="label" translatable="yes">Load project</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="halign">start</property>
-            <property name="hexpand">True</property>
+            <property name="relief">none</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <object class="GtkButton" id="file_save_as">
+            <property name="label" translatable="yes">Save project</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="hexpand">False</property>
             <property name="relief">none</property>
           </object>
           <packing>
@@ -89,14 +145,9 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="file_save_as">
-            <property name="label" translatable="yes">Save project</property>
+          <object class="GtkSeparator">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="halign">start</property>
-            <property name="hexpand">False</property>
-            <property name="relief">none</property>
+            <property name="can_focus">False</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -105,9 +156,13 @@
           </packing>
         </child>
         <child>
-          <object class="GtkSeparator">
+          <object class="GtkButton" id="file_about">
+            <property name="label" translatable="yes">About</property>
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="hexpand">False</property>
+            <property name="relief">none</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -121,8 +176,6 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="halign">start</property>
-            <property name="hexpand">False</property>
             <property name="relief">none</property>
           </object>
           <packing>
@@ -158,6 +211,21 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkCheckButton" id="view-out-of-scope">
+            <property name="label" translatable="yes">view out scope</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="active">True</property>
+            <property name="draw_indicator">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
           </packing>
         </child>
         <child>

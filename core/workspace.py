@@ -371,20 +371,21 @@ class Serviceslist():
 
 
 		self.services_list.add(self.servicestree)
-		self.refresh(self.database)
-
+		
 		#self.servicestree.show()
 		self.services_box.show()
+		self.out_of_scope = True
 
 		self.servicestree.props.activate_on_single_click = True
 
+		self.refresh(self.database)
 
 
 	def refresh(self, db):
 		# refresh the log tree with the new database
 
 		self.database = db
-		ports = self.database.get_services_uniq()
+		ports = self.database.get_services_uniq(scope=self.out_of_scope)
 		self.services_liststore.clear()
 
 		for port in ports:
@@ -394,6 +395,10 @@ class Serviceslist():
 
 		return True
 
+	def toggle_scope(self):
+		# switch scope 
+		self.out_of_scope = not self.out_of_scope
+		self.refresh(self.database)
 
 
 	def _search_service(self, widget):
@@ -429,13 +434,13 @@ class Hostlist():
 		self.host_box     = builder.get_object("host-box")
 
 		self.host_search.connect("search-changed", self._search_host)
-		self.host_liststore = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, int)
+		self.host_liststore = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str, str, int)
 
 		#creating the treeview, making it use the filter as a model, and adding the columns
 		self.hosttree = Gtk.TreeView(model=self.host_liststore) #.new_with_model(self.language_filter)
-		self.refresh(self.database)
+		
 
-		for i, column_title in enumerate(["#", "address", "hostname", "status"]):
+		for i, column_title in enumerate(["#", "address", "hostname", "status", "scope"]):
 			if i == 0:
 
 				renderer = Gtk.CellRendererPixbuf()
@@ -458,7 +463,9 @@ class Hostlist():
 
 		self.hosttree.props.activate_on_single_click = True
 
+		self.out_of_scope = True
 
+		self.refresh(self.database)
 
 	def refresh(self, db):
 		# refresh the log tree with the new database
@@ -478,15 +485,28 @@ class Hostlist():
 			except:
 				icon = iconslib.icon("unknown")
 
-			try:
-				self.host_liststore.append([icon, host.address, host.hostname.split(" ")[0], status, host.id])
-			except:
-				self.host_liststore.append([icon, host.address, "", status, host.id])
+			if not self.out_of_scope:
+				if host.scope:
+					try:
+						self.host_liststore.append([icon, host.address, host.hostname.split(" ")[0], status, str(host.scope),  host.id])
+					except:
+						self.host_liststore.append([icon, host.address, "", status, str(host.scope), host.id])
+
+			else:
+				try:
+					self.host_liststore.append([icon, host.address, host.hostname.split(" ")[0], status, str(host.scope),  host.id])
+				except:
+					self.host_liststore.append([icon, host.address, "", status, str(host.scope), host.id])
+
 
 		self.hosttree.show()
 
 		return True
 
+	def toggle_scope(self):
+		# switch scope 
+		self.out_of_scope = not self.out_of_scope
+		self.refresh(self.database)
 
 	def _search_host(self, widget):
 		# search an host in hostlist and hint it
@@ -509,7 +529,7 @@ class Hostlist():
 
 
 class Serviceview():
-	def __init__(self, service, database):
+	def __init__(self, service, database, view_out_scope=True):
 		""" servicesview workspace tab """
 		builder	 = Gtk.Builder() # glade
 		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/servicesview.glade")	
@@ -533,16 +553,13 @@ class Serviceview():
 
 		self.portlistframe.add(scrolled)
 
-		#self.treeview.show_all()
-		#self.portlistframe.show()
-
-		self.refresh(self.database)
+		self.refresh(self.database, view_out_scope=view_out_scope)
 
 
-	def refresh(self, db):
+	def refresh(self, db, view_out_scope = True):
 
 		self.database = db
-		self.treeview.refresh(self.database, self.service)
+		self.treeview.refresh( self.database, self.service, scope=view_out_scope )
 
 
 class Hostview():
@@ -702,6 +719,7 @@ class Main():
 		self.file_import         = builder.get_object("file_import")
 		self.file_open           = builder.get_object("file_open")
 		self.file_save_as        = builder.get_object("file_save_as")
+		self.file_about          = builder.get_object("file_about")
 		
 		self.portlist_empty = True
 
@@ -710,7 +728,11 @@ class Main():
 		self.auto_exec       = builder.get_object("auto-execute-ext")
 		self.use_proxychains = builder.get_object("use-proxychains")
 		self.view_logs       = builder.get_object("view-logs")
+		self.out_of_scope    = builder.get_object("view-out-of-scope")
 
+		# about window
+		self.about_window    = builder.get_object("about-window")
+		self.donate_button   = builder.get_object("donate-button")
 
 		# workspace & hostlist
 		self.controller_notebook = builder.get_object("controller-notebook")
@@ -720,10 +742,14 @@ class Main():
 
 		self.welcome_note        = builder.get_object("welcome-note")
 
+		# connect donate button
+		self.donate_button.connect('clicked', self._donate_url)
+
 		# connect preferences menu for quit
 		self.use_proxychains.connect('toggled', self._quit_menu)
 		self.auto_exec.connect('toggled', self._quit_menu)
 		self.view_logs.connect('toggled', self._quit_menu)
+		self.out_of_scope.connect('toggled', self._quit_menu)
 
 		# connect main menu for quit
 		self.file_addtarget.connect('clicked', self._quit_menu)
@@ -731,9 +757,28 @@ class Main():
 		self.file_open.connect('clicked', self._quit_menu)
 		self.file_import.connect('clicked', self._quit_menu)
 		self.file_save_as.connect('clicked', self._quit_menu)
+		self.file_about.connect('clicked', self._quit_menu)
 
-		#self.workspace.add(self.welcome_note)
+		# show about window
+		self.file_about.connect('clicked', self.show_about)
+		self.about_window.connect('response', self.close_about)
+
+
+	def _donate_url(self,widget):
+		url = "\"https://www.paypal.com/donate/?token=OblZPt9m--dJC0S-6QISb8J5ae_24cklvOOu5crnd1CFRyhQTADa_ZRFKbbUh93U56qeAW&country.x=US&locale.x=en_XC\""
+		os.system('xdg-open %s' % url)
 
 	def _quit_menu(self,widget):
+
 		self.preferences_popover.hide()
 		self.popovermenu2.hide()
+
+	def close_about(self,widget,event):
+
+		self.window.set_sensitive(True)
+		self.about_window.hide()
+
+	def show_about(self,widget):
+
+		self.window.set_sensitive(False)
+		self.about_window.show_all()
