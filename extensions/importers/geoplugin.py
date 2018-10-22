@@ -48,6 +48,9 @@ class karma_ext():
 			
 			add_host.latitude = geo_out["geoplugin_latitude"]
 			add_host.longitude = geo_out["geoplugin_longitude"]
+			add_host.country_code = geo_out["geoplugin_countryCode"]
+			add_host.country_name = geo_out["geoplugin_countryName"]
 
 			self.database.session.add(add_host)
 			self.database.session.commit()
+

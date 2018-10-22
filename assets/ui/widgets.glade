@@ -20,7 +20,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">OS</property>
+            <property name="label" translatable="yes">os</property>
             <property name="selectable">True</property>
             <attributes>
               <attribute name="weight" value="bold"/>
@@ -49,7 +49,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Status</property>
+            <property name="label" translatable="yes">status</property>
             <property name="selectable">True</property>
             <attributes>
               <attribute name="weight" value="bold"/>
@@ -78,7 +78,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Hostnames</property>
+            <property name="label" translatable="yes">hostnames</property>
             <property name="selectable">True</property>
             <attributes>
               <attribute name="weight" value="bold"/>
@@ -106,7 +106,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Distance</property>
+            <property name="label" translatable="yes">distance</property>
             <property name="selectable">True</property>
             <attributes>
               <attribute name="weight" value="bold"/>
@@ -135,7 +135,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Address</property>
+            <property name="label" translatable="yes">address</property>
             <property name="selectable">True</property>
             <attributes>
               <attribute name="weight" value="bold"/>
@@ -164,7 +164,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">MAC address</property>
+            <property name="label" translatable="yes">mac address</property>
             <property name="justify">right</property>
             <property name="selectable">True</property>
             <attributes>
@@ -193,7 +193,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">TCP sequence</property>
+            <property name="label" translatable="yes">tcp sequence</property>
             <property name="justify">right</property>
             <property name="selectable">True</property>
             <attributes>
@@ -211,7 +211,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Uptime</property>
+            <property name="label" translatable="yes">uptime</property>
             <property name="justify">right</property>
             <property name="selectable">True</property>
             <attributes>
@@ -229,7 +229,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Vendor</property>
+            <property name="label" translatable="yes">vendor</property>
             <property name="justify">right</property>
             <property name="selectable">True</property>
             <attributes>
@@ -283,7 +283,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Latitude</property>
+            <property name="label" translatable="yes">latitude</property>
             <property name="justify">right</property>
             <property name="selectable">True</property>
             <attributes>
@@ -301,7 +301,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Longitude</property>
+            <property name="label" translatable="yes">longitude</property>
             <property name="justify">right</property>
             <property name="selectable">True</property>
             <attributes>
@@ -335,6 +335,126 @@
           <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">10</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="height_request">27</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">end</property>
+            <property name="label" translatable="yes">country code</property>
+            <property name="justify">right</property>
+            <property name="selectable">True</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">11</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="height_request">27</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">end</property>
+            <property name="label" translatable="yes">country name</property>
+            <property name="justify">right</property>
+            <property name="selectable">True</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">12</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="height_request">27</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">end</property>
+            <property name="label" translatable="yes">organization</property>
+            <property name="justify">right</property>
+            <property name="selectable">True</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">13</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="height_request">27</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">end</property>
+            <property name="label" translatable="yes">isp</property>
+            <property name="justify">right</property>
+            <property name="selectable">True</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">14</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="info-country_code">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="selectable">True</property>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">11</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="info-country_name">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="selectable">True</property>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">12</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="info-organization">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="selectable">True</property>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">13</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="info-isp">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="selectable">True</property>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">14</property>
           </packing>
         </child>
       </object>

@@ -170,9 +170,13 @@ class host_informations(Gtk.ScrolledWindow):
 		self.info_tcpseq	= builder.get_object("info-tcpseq")
 		self.info_uptime	= builder.get_object("info-uptime")
 		
-		
 		self.info_latitude  = builder.get_object("info-latitude")
 		self.info_longitude = builder.get_object("info-longitude")
+
+		self.info_isp          = builder.get_object("info-isp")
+		self.info_country_code = builder.get_object("info-country_code")
+		self.info_country_name = builder.get_object("info-country_name")
+		self.info_organization = builder.get_object("info-organization")
 
 		viewport = Gtk.Viewport()
 		viewport.add(self.info_viewport)
@@ -193,43 +197,36 @@ class host_informations(Gtk.ScrolledWindow):
 		self.host = host
 		self.database = database
 
-		try:
-			self.info_os.set_text(str(host.os_match))#.split("\n")[0]
-		except: pass
+		
+		self.info_os.set_text(str(host.os_match))#.split("\n")[0]
+		
 
 		hostnamestring = ""
 		
-		try:
-			self.info_status.set_text(host.status)
-		except:pass
-		try:
-			self.info_hostnames.set_text(host.hostname)
-		except:pass
-		try:
-			self.info_address.set_text(host.address)
-		except:pass
-		try:
-			self.info_distance.set_text(str(host.distance)+" hops")
-		except:pass
-		try:
-			self.info_mac.set_text(host.mac)
-		except:pass
-		try:
-			self.info_vendor.set_text(host.vendor)
-		except: pass
-		try:
-			self.info_uptime.set_text(str(host.uptime) + " seconds")
-		except: pass
-		try:
-			self.info_tcpseq.set_text(host.tcpsequence)
-		except: pass
-		try:
-			self.info_latitude.set_text(str(host.latitude))
-		except: pass
-		try:
-			self.info_longitude.set_text(str(host.longitude))
-		except: pass
+		self.info_status.set_text(host.status)
 
+		self.info_hostnames.set_text(host.hostname)
+
+		self.info_address.set_text(host.address)
+
+		self.info_distance.set_text(str(host.distance)+" hops")
+
+		self.info_mac.set_text(host.mac)
+
+		self.info_vendor.set_text(host.vendor)
+
+		self.info_uptime.set_text(str(host.uptime) + " seconds")
+		self.info_tcpseq.set_text(host.tcpsequence)
+		
+		self.info_latitude.set_text(str(host.latitude))
+		
+		#try:
+		self.info_longitude.set_text(str(host.longitude))
+		self.info_organization.set_text(str(host.organization))
+		self.info_isp.set_text(str(host.isp))
+		self.info_country_code.set_text(str(host.country_code))
+		self.info_country_name.set_text(str(host.country_name))
+		#except: pass
 
 class OSM(osmgpsmap.Map):
 	def __init__(self, database, host, *args, **kwargs):

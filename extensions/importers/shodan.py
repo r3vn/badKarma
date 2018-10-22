@@ -62,19 +62,26 @@ class karma_ext():
 				# update values only if there's more informations
 
 				if len(hostname) > 0:
-					add_host.hostname = hostname
+					if not hostname in add_host.hostname:
+						# add multiple hostnames
+						add_host.hostname = add_host.hostname + hostname + " "
+
 				if len(match) > 0:
 					add_host.os_match = match
 				if len(add_host.status) > 0:
 					add_host.status = "up"
-				
+
+				add_host.isp = smap_out[host]["isp"]
+				add_host.country_name =  smap_out[host]["country_name"]
+				add_host.country_code = smap_out[host]["country_code"]
+				add_host.organization = smap_out[host]["org"]
 				add_host.latitude = smap_out[host]["latitude"]
 				add_host.longitude = smap_out[host]["longitude"]
 
 
 			else:
 				# add the host to the db
-				add_host = targets(address=host, latitude=smap_out[host]["latitude"],longitude= smap_out[host]["longitude"],hostname=hostname, os_match=match, status="up")
+				add_host = targets(address=host, latitude=smap_out[host]["latitude"],longitude= smap_out[host]["longitude"],hostname=hostname, os_match=match, status="up", country_code = smap_out[host]["country_code"], country_name = smap_out[host]["country_name"], organization = smap_out[host]["org"], isp = smap_out[host]["isp"])
 			
 			# commit to db
 			self.database.session.add(add_host)

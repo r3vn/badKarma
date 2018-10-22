@@ -45,6 +45,10 @@ class targets(Base):
 	longitude     = Column(Float, nullable=True)
 	scripts       = Column(Text, nullable=True)
 	scope         = Column(Boolean, default=False)
+	country_code  = Column(String(3), nullable=True)
+	country_name  = Column(String(100), nullable=True)
+	isp           = Column(String(100), nullable=True)
+	organization  = Column(String(100), nullable=True)
 
 class services(Base):
 	__tablename__ = "services"
