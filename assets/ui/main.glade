@@ -18,7 +18,7 @@
     <property name="program_name">badKarma</property>
     <property name="version">current</property>
     <property name="copyright" translatable="yes">(c) 2018-2019 xfiltrated.com</property>
-    <property name="comments" translatable="yes">Advanced Network Reconnaissance Toolkit</property>
+    <property name="comments" translatable="yes">Network Reconnaissance Toolkit</property>
     <property name="website">https://badkarma.xfiltrated.com</property>
     <property name="authors">Giuseppe `r3vn` Corti</property>
     <property name="logo">../images/icon.png</property>
