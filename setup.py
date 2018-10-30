@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# badKarma - advanced network reconnaissance toolkit
+# badKarma - network reconnaissance toolkit
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -63,7 +63,7 @@ def asset_walk(directory, target_prefix, root_replace=None):
 setup(
 	name="badKarma",
 	version="0.0.1",
-	description="advanced network reconnaissance toolkit",
+	description="network reconnaissance toolkit",
 	author="Giuseppe Corti",
 	url="https://github.com/r3vn/badKarma",
 	scripts=["badkarma.py"],

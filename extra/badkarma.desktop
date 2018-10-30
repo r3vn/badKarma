@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=badKarma
-Comment=Advanced network reconnaissance toolkit
+Comment=Network reconnaissance toolkit
 Icon=badkarma
 Exec=badkarma
 Terminal=false
