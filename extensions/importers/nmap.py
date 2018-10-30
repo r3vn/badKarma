@@ -71,7 +71,7 @@ class karma_ext():
 				if len(hostname) > 0:
 					if not hostname in add_host.hostname:
 						# add multiple hostnames
-						add_host.hostname = add_host.hostname + hostname + " "
+						add_host.hostname = add_host.hostname + " " + hostname
 
 				if len(match) > 0:
 					add_host.os_match = match
