@@ -57,7 +57,7 @@ class karma_ext(GObject.GObject):
 		proxychains      = config["proxychains"]
 		auto_exec        = config["autoexec"]
 		rhost            = config["rhost"]
-		domain           = config["domain"]
+		domain           = config["domain"].split()[0]
 		rport            = config["rport"]
 		output_file      = config["outfile"]
 		path_config      = config["path_config"]

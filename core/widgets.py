@@ -184,7 +184,7 @@ class host_informations(Gtk.ScrolledWindow):
 		viewport.set_hexpand(True)
 
 		self.add(viewport)
-		self.set_property("height-request", 450)
+		self.set_property("height-request", 400)
 		self.show_all()
 
 		self.database = database
@@ -247,7 +247,7 @@ class OSM(osmgpsmap.Map):
 		self.database = database
 
 		self.show()
-		self.set_property("height-request", 450)
+		self.set_property("height-request", 400)
 
 
 		self.refresh(self.database, self.host)
@@ -464,7 +464,7 @@ class Notesview(Gtk.ScrolledWindow):
 		viewport = Gtk.Viewport()
 		viewport.add(self.notes_view)
 
-		self.set_property("height-request", 450)
+		self.set_property("height-request", 400)
 		self.add(viewport)
 		self.show_all()
 		self.refresh(self.database, self.host)

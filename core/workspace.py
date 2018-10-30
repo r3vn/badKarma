@@ -540,14 +540,13 @@ class Serviceview():
 		self.notebook = builder.get_object("notebook1")
 		self.portlistframe = builder.get_object("portlistframe")
 
-		#creating the treeview, making it use the filter as a model, and adding the columns
+		# creating the treeview, making it use the filter as a model, and adding the columns
 		self.treeview = ServicesTree(self.database, self.service)
 
 		scrolled = Gtk.ScrolledWindow()
 		viewport = Gtk.Viewport()
 
 		scrolled.add(viewport)
-		scrolled.set_property("height-request", 450)
 		viewport.add(self.treeview)
 		scrolled.show_all()
 
@@ -579,6 +578,11 @@ class Hostview():
 		self.dash_title = builder.get_object("dash-title")
 		self.dash_title.set_text("Target: %s" % self.host.address)
 
+		# responsive widgets rows
+		self.w_row_1 = builder.get_object("row1")
+		self.w_row_2 = builder.get_object("row2")
+		self.w_row_3 = builder.get_object("row3")
+
 		# info-tab
 		self.info_loc = builder.get_object("tab-info-location")
 		self.info_tab = host_informations(self.database, self.host)
@@ -599,7 +603,7 @@ class Hostview():
 		viewport = Gtk.Viewport()
 
 		scrolled_history.add(viewport)
-		scrolled_history.set_property("height-request", 450)
+		scrolled_history.set_property("height-request", 400)
 		viewport.add(self.history_view)
 
 		self.history_box.add(scrolled_history)
@@ -624,7 +628,7 @@ class Hostview():
 		viewport = Gtk.Viewport()
 
 		scrolled.add(viewport)
-		scrolled.set_property("height-request", 450)
+		scrolled.set_property("height-request", 400)
 		viewport.add(self.treeview)
 		scrolled.show_all()
 
@@ -655,6 +659,28 @@ class Hostview():
 			self.info_image.set_from_pixbuf(iconslib.get_icon(self.host.os_match,lg=True))
 		except: pass
 
+		# responsive stuff
+
+		self.w_row_1.connect('size-allocate', self._size_changed)
+		self.w_row_2.connect('size-allocate', self._size_changed)
+		self.w_row_3.connect('size-allocate', self._size_changed)
+
+	def _size_changed(self, widget, rectangle):
+		""" host view scrolled size changed, 
+		this make the widget's "grid" responsive """
+
+		orient = widget.get_orientation()
+		
+		if rectangle.width < 680:
+			if orient == Gtk.Orientation.HORIZONTAL:
+				# convert hbox to vbox
+				widget.set_orientation(Gtk.Orientation.VERTICAL)
+		else:
+			if orient == Gtk.Orientation.VERTICAL:
+				# convert vbox to hbox
+				widget.set_orientation(Gtk.Orientation.HORIZONTAL)
+
+
 	def refresh(self, db, history = False):
 
 		# refresh history
@@ -675,6 +701,16 @@ class Hostview():
 			self.info_os_short.set_text(str(self.host.os_match).split("\n")[0])
 			self.info_image.set_from_pixbuf(iconslib.get_icon(self.host.os_match,lg=True))
 		except: pass
+
+		# responsive stuff
+		if self.w_row_1.get_allocation().width < 680:
+			self.w_row_1.set_orientation(Gtk.Orientation.VERTICAL)
+			self.w_row_2.set_orientation(Gtk.Orientation.VERTICAL)
+			self.w_row_3.set_orientation(Gtk.Orientation.VERTICAL)
+		else: 
+			self.w_row_1.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self.w_row_2.set_orientation(Gtk.Orientation.HORIZONTAL)
+			self.w_row_3.set_orientation(Gtk.Orientation.HORIZONTAL)			
 
 	def tab_clicked_max(self, button, name, oldobj, oldparent, image):
 		""" Fullscreen option """
