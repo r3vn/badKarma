@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# badKarma - advanced network reconnaissance toolkit
+# badKarma - network reconnaissance toolkit
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #

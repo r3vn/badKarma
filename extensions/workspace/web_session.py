@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# badKarma - advanced network reconnaissance toolkit
+# badKarma - network reconnaissance toolkit
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -57,7 +57,7 @@ class karma_ext(GObject.GObject):
 		proxychains      = config["proxychains"]
 		auto_exec        = config["autoexec"]
 		rhost            = config["rhost"]
-		domain           = config["domain"].split()[0]
+		domain           = config["domain"]
 		rport            = config["rport"]
 		output_file      = config["outfile"]
 		path_config      = config["path_config"]
@@ -65,7 +65,7 @@ class karma_ext(GObject.GObject):
 		self.o_file      = "/tmp/"+''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8)) + ".mitm"
 
 		if domain:
-			target = domain
+			target = domain.split()[0]
 		else:
 			target = rhost
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# badKarma - advanced network reconnaissance toolkit
+# badKarma - network reconnaissance toolkit
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -110,7 +110,7 @@ class SourceView(GtkSource.View):
 
 
 class Terminal(Vte.Terminal):
-	def __init__(self, *args, **kwargs):
+	def __init__(self, shell="/bin/bash", *args, **kwargs):
 		super(Terminal, self).__init__(*args, **kwargs)
 		""" Vte terminal widget """
 
@@ -120,7 +120,7 @@ class Terminal(Vte.Terminal):
 		self.status, self.pid = self.spawn_sync(
 			Vte.PtyFlags.DEFAULT,
 			os.environ['HOME'],
-			["/bin/bash"],
+			[shell],
 			[],
 			GLib.SpawnFlags.DO_NOT_REAP_CHILD,
 			None,

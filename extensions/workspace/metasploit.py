@@ -39,20 +39,69 @@ class karma_ext(GObject.GObject):
 		GObject.GObject.__init__(self)
 
 		self.config = configparser.ConfigParser()
-		self.config.read(os.path.dirname(os.path.abspath(__file__)) + "/../../conf/shell.conf")
+		self.config.read(os.path.dirname(os.path.abspath(__file__)) + "/../../conf/metasploit.conf")
 
-		self.name = "shell"
+		self.modules = self._indicize()
+
+		self.name = "metasploit"
 		self.log = True
-		self.menu = { "service" : ["all"], "label" : "shell" }
+		self.menu = { "service" : ["all"], "label" : "metasploit" }
+
+	def _service_filter(self, service):
+
+		return service.replace('netbios-ssn','samba').replace('postgresql','postgres').replace('domain','dns').replace('rpcbind','rpc')
+
+	def _indicize(self):
+		""" indicize metasploit modules """
+		final = { 
+			"auxiliary": {},
+			"exploits": {}
+		}
+
+		for directory in final:
+
+			auxiliary = os.listdir( "%s/modules/%s/" % (self.config["default"]["metasploit_path"],directory) )
+
+			for aux in auxiliary:
+				try: 
+					services = os.listdir( "%s/modules/%s/%s/" % (self.config["default"]["metasploit_path"], directory, aux) ) 
+				except: next
+					
+				final[directory][aux] = {}
+		
+				for service in services:
+					try: 
+						msfmodules = os.listdir( "%s/modules/%s/%s/%s/" % (self.config["default"]["metasploit_path"], directory, aux, service) )
+				
+						final[directory][aux][service] = []
+
+						for mod in msfmodules:
+							final[directory][aux][service].append(mod)
+
+					except: pass
+
+		return final
+
 
 	def submenu(self, service):
-		return self.config[service]
+		if service == "generic" or service == "hostlist":
+			return False
 
+		menu = {}
+
+		for cat in self.modules:
+			for typ in self.modules[cat]:
+				service = self._service_filter(service)
+				if service in self.modules[cat][typ]:
+					for mod in self.modules[cat][typ][service]:
+						menu[ cat+"/"+typ+"/"+mod.replace('.rb','').replace('_',' ') ] = ''
+
+		return menu
 
 	def task(self, config):
 		""" prepare the shell """
-		ext          = config["menu-sel"] #.replace(" ","_")
-		serv         = config["service"]
+		ext          = config["menu-sel"].replace(" ","_")
+		serv         = self._service_filter(config["service"])
 		proxychains  = config["proxychains"]
 		auto_exec    = config["autoexec"]
 		rhost        = config["rhost"]
@@ -62,27 +111,16 @@ class karma_ext(GObject.GObject):
 		path_config  = config["path_config"]
 		path_script  = config["path_script"]
 
-		cmd = self.config[serv][ext]
-		cmd = cmd.replace("$rhost", rhost).replace("$rport", str(rport))
-		cmd = cmd.replace('$domain', config["domain"])
-		cmd = cmd.replace('$wordlists', config["path_wordlist"])
-		cmd = cmd.replace('$scripts', config["path_script"])
-		cmd = cmd.replace('$banner', config["banner"])
+		# fix ext
+		ext_i = ext.split("/")[:-1]
+		ext_i.append(serv)
+		ext_i.append(ext.split("/")[-1])
 
-		if "$outfile" in cmd:
-			# set the output_file location string
-			cmd          = cmd.replace("$outfile", output_file)
-
-		if proxychains:
-			cmd = "proxychains "+cmd
-
-		cmd += "; exit;"
-
-		if auto_exec:
-			cmd+="\n"
+		ext = '/'.join(ext_i)
 
 		scroller    = Gtk.ScrolledWindow()
-		terminal	= widgets.Terminal()
+
+		terminal	= widgets.Terminal() #shell="/usr/bin/msfconsole")
 
 		scroller.add(terminal)
 		scroller.show()
@@ -90,11 +128,25 @@ class karma_ext(GObject.GObject):
 		status = terminal.status
 		pid = terminal.pid
 
-		terminal.feed_child(cmd.encode())
+		startmsf =""
+		if proxychains:
+			startmsf = "proxychains "
+		startmsf+="msfconsole -q\n"
+
+		terminal.feed_child( startmsf.encode() ) 
+		terminal.feed_child( ("use %s\n" % (ext)).encode() ) 
+		terminal.feed_child( ("set RHOSTS %s\n" % (rhost)).encode() )
+		terminal.feed_child( ("set RHOST %s\n" % (rhost)).encode() )
+		terminal.feed_child( ("set RPORT %s\n" %(rport)).encode() )
+
+		if auto_exec:
+			terminal.feed_child( ("run\n").encode() )
+			terminal.feed_child( ("exit\n").encode() )	
+			terminal.feed_child( ("exit\n").encode() )	
+
 		terminal.connect("child_exited", self.task_terminated)
 
 		return scroller, pid
-
 
 
 	def task_terminated(self, widget, two):

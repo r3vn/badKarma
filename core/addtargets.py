@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# badKarma - advanced network reconnaissance toolkit
+# badKarma - network reconnaissance toolkit
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -43,7 +43,7 @@ class Targetadd():
 		self.nmap_scan_box = builder.get_object("nmap-scan-box")
 
 		nmap_store = Gtk.ListStore(str)
-		scan_types = ["nmap_default","nmap_intense_scan","nmap_intense_scan_all_tcp","nmap_intense_scan_no_ping","masscan_full_tcp", "get-from-shodan"]
+		scan_types = ["nmap/default","nmap/intense scan","nmap/intense scan all tcp","nmap/intense scan no ping","masscan/full tcp", "get from shodan"]
 
 		for scan in scan_types:
 			nmap_store.append([scan])

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# badKarma - advanced network reconnaissance toolkit
+# badKarma - network reconnaissance toolkit
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -107,7 +107,7 @@ class Handler():
 
 		# cennect services slist events
 		self.services_list.servicestree.connect("row-activated", self.services_row)	
-		self.services_list.servicestree.connect("button_press_event", self.host_click)#self.service_click)
+		self.services_list.servicestree.connect("button_press_event", self.mouse_click, True)#self.service_click)
 
 
 		# add welcome messages
@@ -193,7 +193,7 @@ class Handler():
 	def _filter_service(self, service):
 		""" function to replace service name """
 		service = service.lower()
-		service = service.replace("soap","http").replace("https","http").replace("ssl","http").replace("http-proxy","http").replace("http-alt","http").replace("ajp13","http").replace("vnc-http","http").replace("http-mgmt","http").replace("x509","http")
+		service = service.replace("soap","http").replace("https","http").replace("ssl","http").replace("http-proxy","http").replace("http-alt","http").replace("ajp13","http").replace("vnc-http","http").replace("http-mgmt","http").replace("x509","http").replace('iiimsf','http')
 		service = service.replace("microsoft-ds","netbios-ssn")
 		service = service.replace("imaps","imap").replace("pop3s","pop3").replace("smtps","smtp").replace("pop3pw","pop3")
 		service = service.replace("psql","postgresql")
@@ -289,7 +289,7 @@ class Handler():
 				button_workaround = Gtk.Button()
 				button_workaround.set_label(model[active][0])
 
-				self.run_extra( button_workaround, self.extensions.get_extra_by_name("shell"), "hostlist")
+				self.run_extra( button_workaround, self.extensions.get_extra_by_name("shell"), "hostlist", model[active][0])
 				self.add_window.window.destroy()
 				self.main.window.set_sensitive(True)
 
@@ -517,7 +517,7 @@ class Handler():
 		self.work.treeview.connect("button_press_event", self.mouse_click)
 
 
-	def run_multi_extra(self, widget, targets,  ext, service):
+	def run_multi_extra(self, widget, targets,  ext, service, sub_item):
 		""" run extension against multiple targets """
 
 		for serv in targets:
@@ -531,8 +531,7 @@ class Handler():
 				# target is a host
 				self._selected_opt["host"] = serv.address
 
-			self.run_extra(widget, ext, service)
-
+			self.run_extra(widget, ext, service, sub_item)
 
 	def host_click(self, tv, event):
 		""" right click on a host event """
@@ -540,20 +539,13 @@ class Handler():
 		# grab the right click
 		if event.button == 3:
 
-			try:
-				self.rightclickmenu.destroy()
-			except: pass
-
-			self.rightclickmenu = Gtk.Menu()
+			rightclickmenu = Gtk.Menu()
 
 			# get selected host
 			try:
 				targets = []
 
-				if self.on_services_view:
-					(model, pathlist) = self.services_list.servicestree.get_selection().get_selected_rows()
-				else:
-					(model, pathlist) = self.host_list.hosttree.get_selection().get_selected_rows()
+				(model, pathlist) = self.host_list.hosttree.get_selection().get_selected_rows()
 				
 				if len(pathlist) < 1:
 					# right click on nothing
@@ -564,38 +556,27 @@ class Handler():
 
 					tree_iter = model.get_iter(path)
 
-					if self.on_services_view:
+					address = model.get_value(tree_iter,1) # selected host address
+					domain = model.get_value(tree_iter,2) # selected host address
+					host_id = model.get_value(tree_iter,5)
 
-						service = self._filter_service(model.get_value(tree_iter,0)) # selected service
-						# set shell conf section from user selection
-						extra_name = service
+					host_obj = self.database.get_host(host_id)
 
-						for port in self.database.get_ports_by_service(service):
-							targets.append(port)
+					targets.append(host_obj)
 
-					else:
+					self._selected_opt["host"] = address
+					self._selected_opt["domain"] = domain
+					self._selected_opt["port"] = 0
 
-						address = model.get_value(tree_iter,1) # selected host address
-						domain = model.get_value(tree_iter,2) # selected host address
-						host_id = model.get_value(tree_iter,5)
+					# set hosts generic shell conf section
+					extra_name = "hostlist"
 
-						host_obj = self.database.get_host(host_id)
+					# Delete host option
+					i4 = Gtk.MenuItem("Delete")
+					i4.show()
 
-						targets.append(host_obj)
-
-						self._selected_opt["host"] = address
-						self._selected_opt["domain"] = domain
-						self._selected_opt["port"] = 0
-
-						# set hosts generic shell conf section
-						extra_name = "hostlist"
-
-				# Delete host option
-				i4 = Gtk.MenuItem("Delete")
-				i4.show()
-
-				self.rightclickmenu.append(i4)
-				i4.connect("activate", self._delete_host, targets)
+					rightclickmenu.append(i4)
+					i4.connect("activate", self._delete_host, targets)
 
 				if len(targets) > 1:
 					# multiple hosts selected
@@ -606,8 +587,8 @@ class Handler():
 					i5.show()
 					i6.show()
 
-					self.rightclickmenu.append(i5)
-					self.rightclickmenu.append(i6)
+					rightclickmenu.append(i5)
+					rightclickmenu.append(i6)
 
 					i5.connect("activate", self._scope, False, targets) # True means Add
 					i6.connect("activate", self._scope, True, targets) # False means remove
@@ -615,7 +596,6 @@ class Handler():
 				else:
 					# single host selected
 					# check if the host in scope and add only one option
-
 					if host_obj.scope:
 						# in scope
 						i5 = Gtk.MenuItem("Remove Scope")
@@ -625,62 +605,75 @@ class Handler():
 						# Out of scope item
 						i5 = Gtk.MenuItem("Add Scope")
 						i5.connect("activate", self._scope, True, targets) # True means Add
-					
+						
 					i5.show()
-					self.rightclickmenu.append(i5)
-									
+					rightclickmenu.append(i5)
 
 				extra = self.extensions.get_extra(extra_name)
 
 				for c_ext in extra:
-					tabs = {}
-
+					
 					try:
-						for extension in extra[c_ext].submenu(extra_name):
+						tabs = {}
+						#extension_ext_menu = Gtk.Menu()
+						submenu = extra[c_ext].submenu(extra_name)
 
-							# remove _ and show spaces
-							extension = extension.replace("_"," ")
+						for sub_item in submenu:
+							#print(sub_item)
+							if len(sub_item.split("/")) > 1:
+								prev = ""
+								prevst = ""
 
-							if len(extension.split(" ")) > 1:
-								if not extension.split(" ")[0] in tabs:
+								for sub in sub_item.split("/"):
+									if sub != sub_item.split("/")[-1]:
+									
+										# new category
+										t_menu = Gtk.Menu()
+										t = Gtk.MenuItem(sub)
+										t.show()
+										t.set_submenu(t_menu)
 
-									i3 = Gtk.MenuItem(extension.split(" ")[0])
-									i3.show()
+										if not sub in tabs:
+											
+											tabs[sub] = t_menu
 
-									tabs[extension.split(" ")[0]] = []
-									tabs[extension.split(" ")[0]].append(Gtk.Menu())
-									tabs[extension.split(" ")[0]].append(i3)
+											if prevst != "":
+												prev.append(t)
+											else:
+												rightclickmenu.append(t)
+										
+										prev = tabs[sub]
+										prevst = sub
 
-									self.rightclickmenu.append(i3)
-								
-								item = Gtk.MenuItem(extension)
-								tabs[extension.split(" ")[0]][0].append(item)
+									else:
+										#print(sub)
+										item = Gtk.MenuItem( sub ) 
+										item.show()
+										item.connect('activate', self.run_multi_extra, targets, extra[c_ext], extra_name, sub_item)
+
+										prev.append(item)
+
 
 							else:
-
-								item = Gtk.MenuItem(extension)
+								# extension in any sub-categories
+								item = Gtk.MenuItem(sub_item)
+								rightclickmenu.append(item)
+								
+								# show and connect the extension
 								item.show()
-								self.rightclickmenu.append(item)
+								item.connect('activate', self.run_multi_extra, targets, extra[c_ext], extra_name, sub_item)
 
-							item.connect("activate", self.run_multi_extra, targets, extra[c_ext], extra_name)
-					
-				
-						# show all
-						for menu in tabs:
-							tabs[menu][0].hide()
-							tabs[menu][1].set_submenu(tabs[menu][0])
-
-					except : 
+					except Exception as e : 
 						if self.on_services_view:
 							item = Gtk.MenuItem(c_ext)
 							item.show()
-							self.rightclickmenu.append(item)
+							rightclickmenu.append(item)
 
-							item.connect("activate", self.run_multi_extra, targets, extra[c_ext], service)
+							item.connect("activate", self.run_multi_extra, targets, extra[c_ext], service, c_ext)
 
 
-				self.rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
-				self.rightclickmenu.show_all()
+				rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
+				rightclickmenu.show_all()
 
 				return True
 
@@ -688,28 +681,24 @@ class Handler():
 
 
 
-	def mouse_click(self, tv, event):
+	def mouse_click(self, tv, event, alltargets=False):
 		""" right click on a service event """
 		
 		if event.button == 3:
 
-			try:
-				self.rightclick_service_menu.destroy()
-				self.rightclickmenu.destroy()
-			except: pass
-
 			# create the menu and submenu objects
-			self.rightclick_service_menu = Gtk.Menu()
-			self.rightclickmenu          = Gtk.Menu()
-
+			#rightclick_service_menu = Gtk.Menu()
+			rightclickmenu          = Gtk.Menu()
+			
 			targets = []
 			generic = []
 
 			# check
 			if self.on_services_view:
-				#try:
-				(model, pathlist) = self.services_view.treeview.get_selection().get_selected_rows()
-				
+				if alltargets:
+					(model, pathlist) = self.services_list.servicestree.get_selection().get_selected_rows()
+				else:
+					(model, pathlist) = self.services_view.treeview.get_selection().get_selected_rows()
 			else:
 				(model, pathlist) = self.work.treeview.get_selection().get_selected_rows()
 
@@ -722,25 +711,38 @@ class Handler():
 				for path in pathlist :
 					tree_iter = model.get_iter(path)
 
-					# set selected port
-					selected_port = model.get_value(tree_iter,1) 
-					self._selected_opt["port"] = selected_port 
-
-
 					if self.on_services_view:
-						# set selected host if on service view
-						self._selected_opt["host"] =  model.get_value(tree_iter,4) 
-						targets.append(self.database.get_port(model.get_value(tree_iter,7) ))
+						if alltargets:
+							service = self._filter_service(model.get_value(tree_iter,0)) # selected service
+							# set shell conf section from user selection
+							self._selected_opt["service"] =  service
+
+							for port in self.database.get_ports_by_service(service):
+								targets.append(port)
+						else:
+							# set selected port
+							selected_port = model.get_value(tree_iter,1) 
+							self._selected_opt["port"] = selected_port 
+
+							# set selected host if on service view
+							self._selected_opt["host"] =  model.get_value(tree_iter,4) 
+							targets.append(self.database.get_port(model.get_value(tree_iter,7) ))
 
 					else:
+						# set selected port
+						selected_port = model.get_value(tree_iter,1) 
+						self._selected_opt["port"] = selected_port 
+
 						# set selected service if not on service view
 						selected_service = model.get_value(tree_iter,4) # selected service
 						targets.append(self.database.get_port(model.get_value(tree_iter,7)))
 						self._selected_opt["service"] = selected_service 
 
-			except:
+			except Exception as e:
+				print(e)
 				pass
-				
+			
+			#print('si')
 			# fix some multiple names
 			self._selected_opt["service"] = self._filter_service(self._selected_opt["service"])
 
@@ -755,7 +757,7 @@ class Handler():
 					iE = Gtk.MenuItem(extension)
 
 				iE.show()
-				self.rightclickmenu.append(iE)
+				rightclickmenu.append(iE)
 
 				# check if there is a submenu for the current extension
 				try:
@@ -764,43 +766,60 @@ class Handler():
 					submenu = extra[extension].submenu(self._selected_opt["service"])
 
 					for sub_item in submenu:
-						if len(sub_item.split("_")) > 1:
-							if not sub_item.split("_")[0] in tabs:
-								t = Gtk.MenuItem(sub_item.split("_")[0])
-								t.show()
-								tabs[sub_item.split("_")[0]] = []
-								tabs[sub_item.split("_")[0]].append(Gtk.Menu())
-								tabs[sub_item.split("_")[0]].append(t)
+						#print(sub_item)
+						if len(sub_item.split("/")) > 1:
+							prev = ""
+							prevst = ""
 
-					# remove _ and show spaces
-					for tab in tabs:
-						thetab = Gtk.MenuItem(tabs[tab][1].get_label())
-						extension_ext_menu.append(thetab)
-						thetab.show()
-						thetab.set_submenu(tabs[tab][0])
-
-					for sub_item in submenu:
-						sub_item = sub_item.replace("_"," ")
-
-						if len(sub_item.split(" ")) > 1:
-							#print(sub_item)
-							item = Gtk.MenuItem(sub_item)
+							for sub in sub_item.split("/"):
+								if sub != sub_item.split("/")[-1]:
 								
-							tabs[sub_item.split(" ")[0]][0].append(item)
+									# new category
+									t_menu = Gtk.Menu()
+									t = Gtk.MenuItem(sub)
+									t.show()
+									t.set_submenu(t_menu)
+
+									if not sub in tabs:
+										
+										tabs[sub] = t_menu
+
+										if prevst != "":
+											prev.append(t)
+										else:
+											extension_ext_menu.append(t)
+									
+									prev = tabs[sub]
+									prevst = sub
+
+								else:
+									#print(sub)
+									item = Gtk.MenuItem( sub ) 
+									item.show()
+									item.connect('activate', self.run_multi_extra, targets, extra[extension], self._selected_opt["service"], sub_item)
+
+									prev.append(item)
+
 
 						else:
 							# extension in any sub-categories
 							item = Gtk.MenuItem(sub_item)
 							extension_ext_menu.append(item)
 							
-						# show and connect the extension
-						item.show()
-						item.connect('activate', self.run_multi_extra, targets, extra[extension], self._selected_opt["service"])
-		
+							# show and connect the extension
+							item.show()
+							item.connect('activate', self.run_multi_extra, targets, extra[extension], self._selected_opt["service"], sub_item)
+
+					if len(tabs) == 0:
+						not_found = Gtk.MenuItem("nothing")
+						not_found.show()
+						extension_ext_menu.append(not_found)
+					
 					iE.set_submenu(extension_ext_menu)
 
-				except:
-					iE.connect('activate', self.run_multi_extra, targets, extra[extension], self._selected_opt["service"])
+				except Exception as e:
+					#print(e)
+					iE.connect('activate', self.run_multi_extra, targets, extra[extension], self._selected_opt["service"], extra[extension].menu["label"])
 
 				try:
 					# try if there is generic for the current extension
@@ -811,20 +830,23 @@ class Handler():
 						generic.append(sub_item.replace("_"," "))
 				except: pass
 
+			separator = Gtk.SeparatorMenuItem()
+			separator.show()
+			rightclickmenu.append(separator)
+
 			gen_x = self.extensions.get_extra("generic")
 
 			for gen in generic:
 
 				i2 = Gtk.MenuItem(gen)
 				i2.show()
-				self.rightclickmenu.append(i2)
+				rightclickmenu.append(i2)
 
-				i2.connect("activate", self.run_multi_extra, targets, gen_x["shell"], "generic")
+				i2.connect("activate", self.run_multi_extra, targets, gen_x["shell"], "generic", gen)
 
-			self.rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
+			rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
 
 			return True
-
 
 	def end_task(self, caller, out, id):
 		""" function called when an extension's finish a task """
@@ -860,7 +882,7 @@ class Handler():
 
 		
 
-	def run_extra(self, widget, ext, service): # def run_extra_thread(self, widget, ext, service):
+	def run_extra(self, widget, ext, service, sub_item): # def run_extra_thread(self, widget, ext, service):
 		""" run a python extension """
 
 		# get target strings
@@ -878,7 +900,7 @@ class Handler():
 				"proxychains"   : self.main.use_proxychains.get_active(),
 				"rhost"         : host_string,
 				"rport"         : port_string,
-				"menu-sel"      : widget.get_label(), 
+				"menu-sel"      : sub_item, 
 				"service"       : service, 
 				"domain"        : self._selected_opt["domain"],
 				"banner"        : self._selected_opt["banner"],
@@ -893,10 +915,10 @@ class Handler():
 		out, pid = ext.task( ext_conf ) # get output and task pid
 		
 		# define title for logger and notebook's tabs
-		if ext.name == "shell":
-			task_name = widget.get_label()
-		else:
-			task_name = ext.name
+		#if ext.name == "shell":
+		task_name = sub_item
+		#else:
+		#	task_name = ext.name
 
 		task_title = task_name
 		task_target = host_string
