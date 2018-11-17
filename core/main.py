@@ -432,6 +432,8 @@ class Handler():
 		
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()
+			
+		self._sync()
 
 	def services_row(self, listbox, cell, listboxrow):
 		""" serviceslist service click event
