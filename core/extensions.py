@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -18,106 +19,205 @@
 
 import os
 import importlib
+import random
+import string
 
-class Importers:
-	def __init__(self, database):
-		""" Session's extensions engine """
+from gi.repository import GObject
 
-		self.modules = {}
+from core.database import DB
 
-		self._indicize_modules(database)
+class karmaEngine(GObject.GObject):
+	
+	__gsignals__ = {
+		"end_task" : (GObject.SIGNAL_RUN_FIRST, None, (int,str,))
+	}
 
-	def _indicize_modules(self, database):
-		for dirpath, dirnames, filenames in os.walk(os.path.dirname(os.path.abspath(__file__))+"/../extensions/importers/"):
+	def __init__(self, session_file='/tmp/session.karma'):
+		""" Extensions engine """
+		GObject.GObject.__init__(self)
+
+		self.database = DB(session_file)
+		self.extensions = {
+							"workspace": {},
+							"importers": {}
+		}
+
+		self.cwd = os.path.dirname(os.path.abspath(__file__))
+		self.outfiles = {}
+		self.tasks = []
+
+
+		self.id = 1
+
+		for dirpath, dirnames, filenames in os.walk(self.cwd+"/../extensions/"):
 			for filename in [f for f in filenames if f.endswith(".py")]:
-				if filename not in ["__init__.py","__pycache__"]:
-					module_name = str(os.path.join(dirpath, filename).replace(".py","").replace(os.path.dirname(os.path.abspath(__file__))+"/../extensions/importers/","") )
-					module = importlib.import_module('extensions.importers.'+module_name)
-					module = module.karma_ext(database)
+				if filename in ["__init__.py","__pycache__"]:
+					continue # exclude python stuff
 
-					try:
-						# check if the module have a menu option
-						self.menus[module] = module.menu
+				module_name = str(os.path.join(dirpath, filename).replace(".py","").replace(self.cwd+"/../extensions/","") )
+				module      = importlib.import_module('extensions.'+module_name)
+					
+				module      = module.karma_ext()
 
-					except: pass
+				
+				if hasattr( module, 'task' ) and callable(module.task): 
+					# module have tasks
+					self.extensions["workspace"][module.name] = { 
+													"path"   : 'extensions.'+module_name,
+													"module" : module
+					}				
+				
 
-					self.modules[module.name] = { 
-											"path"   : 'extensions.importers.'+module_name,
-											"module" : module
-										 }
-
-		return True
-
-
-
-
-class Extensions:
-	def __init__(self):
-		# initialize extensions
-
-		self.menus = {}
-		self.modules  = {}
-
-		self._indicize_modules()
+				if hasattr( module, 'parse' ) and callable(module.parse):
+					# module have importer
+					self.extensions["importers"][module.name] = { 
+													"path"   : 'extensions.'+module_name,
+													"module" : module
+					}				
 
 
 
-	def get_extra(self, service, all=True):
-		""" return menu list of python extension """
+	def get_menu(self, service, all=True):
+		""" return menu list of  extension """
 		returndict = {}
-		for serv in self.menus:
+		for extension in self.extensions["workspace"]:
 
-			if "all" in self.menus[serv]["service"]:
-				if all:
-					returndict[self.menus[serv]["label"]] = serv
+			for serv in self.extensions["workspace"][extension]["module"].menu["service"]:
 
-			if service in self.menus[serv]["service"]:
-				returndict[self.menus[serv]["label"]] = serv
+				if "all" in serv:
+					if all:
+						returndict[self.extensions["workspace"][extension]["module"].menu["label"]] = self.extensions["workspace"][extension]["module"]
 
+				if service in self.extensions["workspace"][extension]["module"].menu["service"]:
+					returndict[self.extensions["workspace"][extension]["module"].menu["label"]] = self.extensions["workspace"][extension]["module"]
 
 		return returndict
 
 
 
-	def get_extra_by_name(self, name):
+	def get_extension(self, name):
 		""" return an extra object by name """
 		
-		for serv in self.modules:
+		for serv in self.extensions["workspace"]:
 			if name == serv:
-				return self.modules[serv]["module"]
-
-
-
-	def get_new(self, extension_name):
-		""" get a new istance of an extension in order to avoid signals override """
-
-		for serv in self.modules:
-			if extension_name == serv:
-				module = importlib.import_module(self.modules[serv]["path"])
+				module = importlib.import_module(self.extensions["workspace"][serv]["path"])
 
 				return module.karma_ext()
 
 
 
-	def _indicize_modules(self):
-		""" initialize post modules """
+	def get_log(self, extension_name, output):
 
-		for dirpath, dirnames, filenames in os.walk(os.path.dirname(os.path.abspath(__file__))+"/../extensions/workspace/"):
-			for filename in [f for f in filenames if f.endswith(".py")]:
-				if filename not in ["__init__.py","__pycache__"]:
-					module_name = str(os.path.join(dirpath, filename).replace(".py","").replace(os.path.dirname(os.path.abspath(__file__))+"/../extensions/workspace/","") )
-					module = importlib.import_module('extensions.workspace.'+module_name)
-					module = module.karma_ext()
+		return self.extensions['workspace'][extension_name]["module"].get_log(output)
 
-					try:
-						# check if the module have a menu option
-						self.menus[module] = module.menu
+	def import_file(self, path):
+		""" import a scan output file """
+		if os.path.exists(path):
+			with open(path) as myfile:
+				head = "".join(myfile.readlines()[0:5]).replace('\n','')
 
-					except: pass
+				for extension in self.extensions["importers"]:
+					if self.extensions["importers"][extension]["module"].match(head):
+						try:
+							self.extensions["importers"][extension]["module"].parse(path, self.database)
+							#print("parsed")
+						except Exception as E:
+							print("karmaExt exception:")
+							print(self.extensions["importers"][extension]["module"].name)
+							print("---")
+							print(E)
 
-					self.modules[module.name] = { 
-											"path"   : 'extensions.workspace.'+module_name,
-											"module" : module
-										 }
 
-		return True
+	def end_task(self, caller, out, id):
+		""" function called when an extension's finish a task """
+
+		outfile = self.outfiles[id]
+		self.import_file(outfile)
+
+		if os.path.exists(outfile):
+			os.remove(outfile)
+		
+		self.emit('end_task', id, out)
+
+
+	def start_task(self, extension_name, task, rhost, rport=0, proto="tcp", service_str="hostlist", karmaconf={"autoexec":True, "proxychains":False}):
+		""" run a python extension """
+
+		# get extension
+		ext = self.get_extension(extension_name)
+
+		# set the output_file location string
+		output_file = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8)) 
+		output_file = "/tmp/badkarma-" + output_file + ".xml"
+
+		# check if we have data
+		host = self.database.get_host_by_name(rhost)
+		if host:
+
+			try:
+				domain = host.hostname.split()[0]
+			except:
+				domain = host.hostname
+
+			service_obj = self.database.get_host_service(host.id, rport, proto)
+
+			try:
+				if service_str == "http":
+					# Vhost test
+					if domain:
+						print("si")
+						rhost = domain # vhosts test
+			except: pass
+	
+			if service_obj:
+				banner = service_obj.banner
+
+			else:
+				banner = ""
+
+			service = service_str
+
+		else: 
+			# no informations in session
+			service = service_str
+			domain = ""
+			banner = ""
+
+		# config for the extension
+		ext_conf = { 
+				"autoexec"      : karmaconf["autoexec"],
+				"proxychains"   : karmaconf["proxychains"],
+				"rhost"         : rhost,
+				"rport"         : str(rport),
+				"menu-sel"      : task, 
+				"service"       : service, 
+				"domain"        : domain,
+				"banner"        : banner,
+				"proto"         : proto,
+				"outfile"       : output_file,
+				"path_config"   : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../conf"),
+				"path_script"   : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../scripts"),
+				"path_wordlist" : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../wordlists")
+
+				}
+
+		out, pid = ext.task( ext_conf ) # get output and task pid
+		
+		task_title = task
+
+		try:
+			task_target = host.address
+		except: 
+			task_target = host
+
+		if ext.log:
+			
+			if rport != 0:
+				task_target += ":"+str(rport)
+
+			ext.connect('end_task', self.end_task, self.id)
+			self.outfiles[self.id] = output_file 
+
+			self.id += 1
+
+		return ext.read(out), pid, self.id-1

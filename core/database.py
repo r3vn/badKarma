@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -86,7 +87,7 @@ class notes(Base):
 
 class DB:
 
-	def __init__(self, db_loc="/tmp/badkarma.sqlite"):
+	def __init__(self, db_loc):
 
 		engine = create_engine("sqlite:///"+db_loc)
 		Base.metadata.create_all(engine)
@@ -147,12 +148,30 @@ class DB:
 		note.text=value
 		self.session.commit()
 
+	def get_host_by_name(self, ipv4):
+		# check if host exists and get it
+
+		try:
+			return self.session.query(targets).filter( targets.address == ipv4 ).one()
+
+		except:
+			return False
+
 	def host_exist(self, ipv4):
 		# function to check if a host is already in the databse
 		if len(self.session.query(targets).filter( targets.address == ipv4 ).all()) > 0:
 			return True
 		
 		return False
+
+	def get_host_service(self, host_id, port, protocol):
+		# function to check if a port is already in the database
+
+		try:
+			return  self.session.query(services).filter( services.host_id == host_id, services.port == port, services.protocol == protocol ).one()
+
+		except:
+			return False	
 
 	def port_exist(self, host_id, port, protocol):
 		# function to check if a port is already in the database

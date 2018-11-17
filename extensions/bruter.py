@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -79,7 +80,7 @@ class karma_ext(GObject.GObject):
 
 
 		builder	 = Gtk.Builder() # glade
-		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../../assets/ui/bruter.glade")
+		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/bruter.glade")
 
 		self.running = False
 		self.bruter_box = builder.get_object("bruter-box")
@@ -191,7 +192,7 @@ class karma_ext(GObject.GObject):
 		self.emit('end_task', str(widget.get_text_range(0,0,widget.get_cursor_position()[1] + widget.get_row_count(),10)[0]))
 
 	def _bruter_start(self, widget):
-		# start the bruite force process
+		# start the brute force process
 		if self.bruter_start.get_label() == "start":
 
 			cmd = "hydra -t "+self.bruter_threads.get_text()+" " #-l root -P /usr/share/wordlists/dnsmap.txt 127.0.0.1 ssh"]

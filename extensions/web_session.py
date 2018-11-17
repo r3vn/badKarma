@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
+#
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,7 +46,7 @@ class karma_ext(GObject.GObject):
 		GObject.GObject.__init__(self)
 
 		self.config_file = configparser.ConfigParser()
-		self.config_file.read(os.path.dirname(os.path.abspath(__file__)) + "/../../conf/websession.conf")
+		self.config_file.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/websession.conf")
 
 		self.name = "web-session"
 		self.log = True
@@ -127,7 +129,7 @@ class karma_ext(GObject.GObject):
 
 		# add main window
 		builder	 = Gtk.Builder() # glade
-		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../../assets/ui/websession.glade")
+		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/websession.glade")
 
 		main_win         = builder.get_object('websession-main')
 		payloads_toolbar = builder.get_object('payloads-bar')

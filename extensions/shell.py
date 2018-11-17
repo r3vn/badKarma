@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -39,7 +40,7 @@ class karma_ext(GObject.GObject):
 		GObject.GObject.__init__(self)
 
 		self.config = configparser.ConfigParser()
-		self.config.read(os.path.dirname(os.path.abspath(__file__)) + "/../../conf/shell.conf")
+		self.config.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/shell.conf")
 
 		self.name = "shell"
 		self.log = True

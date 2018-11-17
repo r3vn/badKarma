@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -21,9 +22,8 @@ import json
 
 class karma_ext():
 
-	def __init__(self, database):
+	def __init__(self):
 		self.name     = "shodan.io importer"
-		self.database = database
 	
 	def match(self, head_str):
 		""" match string in order to identify nmap xml report """
@@ -31,7 +31,7 @@ class karma_ext():
 			return True
 		return False
 
-	def parse(self, json_file):
+	def parse(self, json_file, database):
 		""" import smap.py json output """
 
 		file = open(json_file,'r')
@@ -55,9 +55,9 @@ class karma_ext():
 				hostname = ""
 
 			# check if the host is already in the db
-			if self.database.host_exist(host):
+			if database.host_exist(host):
 				# update
-				add_host = self.database.session.query(targets).filter( targets.address == host ).one()
+				add_host = database.session.query(targets).filter( targets.address == host ).one()
 				
 				# update values only if there's more informations
 
@@ -84,19 +84,19 @@ class karma_ext():
 				add_host = targets(address=host, latitude=smap_out[host]["latitude"],longitude= smap_out[host]["longitude"],hostname=hostname, os_match=match, status="up", country_code = smap_out[host]["country_code"], country_name = smap_out[host]["country_name"], organization = smap_out[host]["org"], isp = smap_out[host]["isp"])
 			
 			# commit to db
-			self.database.session.add(add_host)
-			self.database.session.commit()
+			database.session.add(add_host)
+			database.session.commit()
 
 			i = 0
 
 
 			for port in smap_out[host]["ports"]:
 
-				service = self.database._find_nmap_service(port,smap_out[host]["data"][i]["transport"])
+				service = database._find_nmap_service(port,smap_out[host]["data"][i]["transport"])
 
-				if self.database.port_exist(add_host.id, port, smap_out[host]["data"][i]["transport"]):
+				if database.port_exist(add_host.id, port, smap_out[host]["data"][i]["transport"]):
 					# update the existing port
-					add_port = self.database.session.query(services).filter( services.host_id == add_host.id, services.port == port, services.protocol == smap_out[host]["data"][i]["transport"] ).one()
+					add_port = database.session.query(services).filter( services.host_id == add_host.id, services.port == port, services.protocol == smap_out[host]["data"][i]["transport"] ).one()
 
 					if len(service) > 0:
 						add_port.service = service
@@ -108,8 +108,8 @@ class karma_ext():
 					add_port = services(port=port, protocol=smap_out[host]["data"][i]["transport"], service=service, fingerprint="", state="open", banner="", host = add_host)
 
 				# commit to db
-				self.database.session.add(add_port)
+				database.session.add(add_port)
 
 				i += 1
 
-		self.database.session.commit()
+		database.session.commit()

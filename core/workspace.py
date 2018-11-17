@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -29,7 +30,7 @@ from gi.repository import GObject
 from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 
-from core.extensions import Extensions
+from core.extensions import karmaEngine
 from core.widgets import *
 
 import core.file_filters as file_filters
@@ -52,7 +53,7 @@ class Logger():
 		self.log_tree = Gtk.TreeView(model=self.log_liststore)
 		self.id = 0
 
-		self.extensions  = Extensions()
+		self.extensions  = karmaEngine()
 
 		for i, column_title in enumerate(["#","Status","Start time", "End time", "Pid", "Target", "Task"]):
 			if i == 1:
@@ -136,15 +137,19 @@ class Logger():
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()
 
-	def add_log(self, pid, title, target, extension):
+	def add_log(self, pid, title, target, extension, id):
 		""" add a task log """
 		self.id -= 1	
-		self.log_liststore.append([self.id, 0, str(datetime.datetime.now()).split(".")[0], " ", pid, target, title, 1, extension, len(self.log_liststore)])
+
+		self.log_liststore.append([-int(id), 0, str(datetime.datetime.now()).split(".")[0], " ", pid, target, title, 1, extension, len(self.log_liststore)])
 		
 		return self.id
 
 	def complete_log(self, id_task, output):
 		""" set at 100% the progressbar """
+
+		id_task = -int(id_task)
+
 		model = self.log_tree.get_model()
 
 		for t in model:
@@ -152,23 +157,23 @@ class Logger():
 			if t[0] == id_task:
 				row = t
 
-		id_r      = row[0]
-		start_dat = row[2]
-		end_dat   = str(datetime.datetime.now()).split(".")[0]
-		pid       = row[4]
-		target    = row[5]
-		title     = row[6]
-		extension = row[8]
-		path      = row[9]
+				id_r      = row[0]
+				start_dat = row[2]
+				end_dat   = str(datetime.datetime.now()).split(".")[0]
+				pid       = row[4]
+				target    = row[5]
+				title     = row[6]
+				extension = row[8]
+				path      = row[9]
 
-		iter = model.get_iter(Gtk.TreePath.new_from_string(str(path)))
+				iter = model.get_iter(Gtk.TreePath.new_from_string(str(path)))
 
-		progress_bar = 0
+				progress_bar = 0
 
-		id = self.database.add_log(pid, start_dat, end_dat, title, target, output, extension)
-		self.log_liststore.set_value(iter, 0, id)
-		self.log_liststore.set_value(iter, 7, GObject.G_MAXINT)
-		self.log_liststore.set_value(iter, 3, end_dat)
+				id = self.database.add_log(pid, start_dat, end_dat, title, target, output, extension)
+				self.log_liststore.set_value(iter, 0, id)
+				self.log_liststore.set_value(iter, 7, GObject.G_MAXINT)
+				self.log_liststore.set_value(iter, 3, end_dat)
 
 
 	def _pulse_progressbars(self):
@@ -200,9 +205,7 @@ class Logger():
 
 			log = self.database.get_logs(str(log_id))
 
-			extension = self.extensions.get_extra_by_name(log.extension)
-
-			scrolledwindow = extension.get_log(log.output)
+			scrolledwindow = self.extensions.get_log(log.extension, log.output)
 
 			# generate and fill the toolbox
 			builder	 = Gtk.Builder()

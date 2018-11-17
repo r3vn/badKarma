@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -32,20 +33,17 @@ except:
 from gi.repository import Gtk
 
 from core.workspace import *
-from core.extensions import Extensions, Importers
+from core.extensions import karmaEngine
 from core.addtargets import Targetadd
-from core.database import DB
 
 import core.file_filters as file_filters
 
 class Handler():
-	def __init__(self, database):
+	def __init__(self, engine):
 		""" badkarma handler class """
 
 		# initialization
 		
-		self.tasks	     = {} # task queue
-		self.outfiles    = {} # scan import queue
 		self.scenes	     = {  # saved Gtk scenes of hostview
 								"hosts_view"    : {},
 								"services_view" : {},
@@ -59,9 +57,9 @@ class Handler():
 								"banner"  : "",
 							} 
 
-		self.database    = database
-		self.extensions  = Extensions() # extension engine
-		self.ext_session = Importers(self.database) # session extension engine
+		self.engine      = engine
+		self.database    = self.engine.database
+		self.ext_session = self.engine.extensions["importers"]
 
 		self.on_services_view = False
 
@@ -116,6 +114,9 @@ class Handler():
 
 		# add logger
 		self.main.main_paned.add2(self.logger.notebook)	
+
+		# connect extension signal
+		self.engine.connect('end_task', self.end_task)
 
  
 		# populate window
@@ -274,11 +275,6 @@ class Handler():
 		if add:
 			target = self.add_window.target_input.get_text()
 			
-			self._selected_opt["host"] = target
-			self._selected_opt["service"] = "hostlist"
-			self._selected_opt["port"] = 0
-			
-
 			if self.add_window.hostdiscovery.get_active():
 				# user chose to scan the new host
 				# we will add it using the run_ext function
@@ -289,7 +285,7 @@ class Handler():
 				button_workaround = Gtk.Button()
 				button_workaround.set_label(model[active][0])
 
-				self.run_extra( button_workaround, self.extensions.get_extra_by_name("shell"), "hostlist", model[active][0])
+				self.run_extra( button_workaround, target, self.engine.get_extension("shell"), "hostlist", model[active][0] )
 				self.add_window.window.destroy()
 				self.main.window.set_sensitive(True)
 
@@ -330,7 +326,15 @@ class Handler():
 		if response == Gtk.ResponseType.OK:
 			file_selected = dialog.get_filename()
 			try:
-				self.database = DB(db_loc=file_selected)
+				self.engine = karmaEngine(session_file=file_selected)
+				self.database = self.engine.database
+
+
+
+
+				# update the hostlist
+				self._clear_workspace()
+				self._sync(reset=True)
 				
 			except Exception as e:
 				print (e) 
@@ -340,9 +344,7 @@ class Handler():
 
 		dialog.destroy()
 
-		# update the hostlist
-		self._clear_workspace()
-		self._sync(reset=True)
+
 		
 
 	def save_file_as(self, widget):
@@ -384,24 +386,16 @@ class Handler():
 		if response == Gtk.ResponseType.OK:
 			file_selected = dialog.get_filename()
 
-			with open(file_selected) as myfile:
-				head = "".join(myfile.readlines()[0:5]).replace('\n','')
+			self.engine.import_file(file_selected)
 
-				for extension in self.ext_session.modules:
-					if self.ext_session.modules[extension]["module"].match(head):
-						try:
-							self.ext_session.modules[extension]["module"].parse(file_selected)
-						except Exception as E:
-							print(self.ext_session.modules[extension]["module"].name)
-							print("---")
-							print(E)
+			self._sync()
 
 			
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.destroy()
 
 		dialog.destroy()
-		self._sync()
+		
 
 
 	def _delete_host(self, widget, hosts):
@@ -432,6 +426,8 @@ class Handler():
 				for row in model:
 					if row[4] == host.id:
 						self.host_list.host_liststore.remove(row.iter)
+
+				self._sync()
 
 		
 		elif response == Gtk.ResponseType.CANCEL:
@@ -510,28 +506,73 @@ class Handler():
 				self.scenes["hosts_view"][str(host_id)] = self.work
 
 		# add the scene
-		self._selected_opt["host"] = self.work.host.address
+		self._selected_opt["host"]   = self.work.host.address
 		self._selected_opt["domain"] = self.work.host.hostname
 		self.main.workspace.add(self.work.notebook)
 
 		self.work.treeview.connect("button_press_event", self.mouse_click)
 
 
-	def run_multi_extra(self, widget, targets,  ext, service, sub_item):
+	def run_extra(self, widget, target, ext, service, sub_item):
+		""" Called on adding new hosts """
+
+		try: self._temp_win.destroy()
+		except: pass
+
+		view, pid, id = self.engine.start_task(ext.name, sub_item, target, karmaconf={"autoexec":True, "proxychains":False})
+		view.show()
+
+		self._temp_win = Gtk.Window() # ugly fix for tasks termination
+		self._temp_win.add(view)
+
+		self.logger.add_log(pid , sub_item, target, ext.name, id)
+			
+
+
+	def run_multi_extra(self, widget, targets, ext, service, sub_item):
 		""" run extension against multiple targets """
 
 		for serv in targets:
 
 			try:
-				# target is a port
-				self._selected_opt["host"]   = serv.host.address
-				self._selected_opt["port"]   = serv.port
-				self._selected_opt["banner"] = serv.banner
+				# targeting service
+				address = serv.host.address
+				port = serv.port
+				protocol = serv.protocol
 			except:
-				# target is a host
-				self._selected_opt["host"] = serv.address
+				# targeting host
+				address = serv.address
+				protocol = "tcp"
+				port = 0
 
-			self.run_extra(widget, ext, service, sub_item)
+			print(service)
+
+			view, pid, id = self.engine.start_task(ext.name, sub_item, address, rport=port, proto=protocol, service_str=service, karmaconf={"autoexec":self.main.auto_exec.get_active(), "proxychains":self.main.use_proxychains.get_active()})
+			view.show()
+			#self.tasks[id] = { "views" : view, "ext" : ext }
+			self.logger.add_log(pid , sub_item, address, ext.name, id)
+			
+			# box label + close button for extension
+			box_label = Gtk.Box(spacing=6)
+			box_label.add( Gtk.Label(sub_item) )
+			close_image = Gtk.Image.new_from_icon_name( "gtk-delete", Gtk.IconSize.MENU )
+			close_button = Gtk.Button()
+			close_button.set_relief(Gtk.ReliefStyle.NONE)
+			close_button.add(close_image)
+			box_label.add( close_button )
+
+			# close task window option
+			close_button.connect("clicked", self.close_task_tab, view)
+
+			if self.on_services_view:
+				self.services_view.notebook.append_page(view,box_label)
+				self.services_view.notebook.set_current_page(-1)
+			else:
+				self.work.notebook.append_page(view,box_label)
+				self.work.notebook.set_current_page(-1)
+
+			box_label.show_all()
+
 
 	def host_click(self, tv, event):
 		""" right click on a host event """
@@ -609,7 +650,7 @@ class Handler():
 					i5.show()
 					rightclickmenu.append(i5)
 
-				extra = self.extensions.get_extra(extra_name)
+				extra = self.engine.get_menu(extra_name)
 
 				for c_ext in extra:
 					
@@ -687,7 +728,6 @@ class Handler():
 		if event.button == 3:
 
 			# create the menu and submenu objects
-			#rightclick_service_menu = Gtk.Menu()
 			rightclickmenu          = Gtk.Menu()
 			
 			targets = []
@@ -747,7 +787,7 @@ class Handler():
 			self._selected_opt["service"] = self._filter_service(self._selected_opt["service"])
 
 			# get extra extensions
-			extra = self.extensions.get_extra(self._selected_opt["service"])
+			extra = self.engine.get_menu(self._selected_opt["service"])
 
 			for extension in extra:
 				if extension == "shell":
@@ -819,7 +859,7 @@ class Handler():
 
 				except Exception as e:
 					#print(e)
-					iE.connect('activate', self.run_multi_extra, targets, extra[extension], self._selected_opt["service"], extra[extension].menu["label"])
+					iE.connect('activate', self.run_multi_extra, targets, extra[extension], self._selected_opt["service"], extra[extension].menu["label"]) #.menu["label"])
 
 				try:
 					# try if there is generic for the current extension
@@ -834,7 +874,7 @@ class Handler():
 			separator.show()
 			rightclickmenu.append(separator)
 
-			gen_x = self.extensions.get_extra("generic")
+			gen_x = self.engine.get_menu("generic")
 
 			for gen in generic:
 
@@ -842,127 +882,20 @@ class Handler():
 				i2.show()
 				rightclickmenu.append(i2)
 
-				i2.connect("activate", self.run_multi_extra, targets, gen_x["shell"], "generic", gen)
+				i2.connect("activate", self.run_multi_extra, targets, extra["shell"], "generic", gen)
 
 			rightclickmenu.popup(None, None, None, None, 0, Gtk.get_current_event_time())
 
 			return True
 
-	def end_task(self, caller, out, id):
+	def end_task(self, caller, id, out):
 		""" function called when an extension's finish a task """
 
 		self.logger.complete_log(id, out) # complete the logger row of the task
-		del self.tasks[id] # delete the task from the running task's dict
+		#del self.tasks[id] # delete the task from the running task's dict
 
-		try:
-			# check if there is an output file to import
-			outfile = self.outfiles[id]
-
-			if os.path.exists(outfile):
-				with open(outfile) as myfile:
-					head = "".join(myfile.readlines()[0:5]).replace('\n','')
-
-					for extension in self.ext_session.modules:
-						if self.ext_session.modules[extension]["module"].match(head):
-							try:
-								self.ext_session.modules[extension]["module"].parse(outfile)
-							except Exception as E:
-								print(self.ext_session.modules[extension]["module"].name)
-								print("---")
-								print(E)
-
-			
-				self._sync()
-				os.remove(outfile)
-			else:
-				self._sync(history = True)
-
-		except Exception as e: 
-			print(e)
-
+		self._sync()
 		
-
-	def run_extra(self, widget, ext, service, sub_item): # def run_extra_thread(self, widget, ext, service):
-		""" run a python extension """
-
-		# get target strings
-		port_string   = str(self._selected_opt["port"])
-		host_string   = self._selected_opt["host"]
-		banner_string = self._selected_opt["banner"]
-
-		# set the output_file location string
-		output_file = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8)) 
-		output_file = "/tmp/badkarma-" + output_file + ".xml"
-
-		# config for the extension
-		ext_conf = { 
-				"autoexec"      : self.main.auto_exec.get_active(),
-				"proxychains"   : self.main.use_proxychains.get_active(),
-				"rhost"         : host_string,
-				"rport"         : port_string,
-				"menu-sel"      : sub_item, 
-				"service"       : service, 
-				"domain"        : self._selected_opt["domain"],
-				"banner"        : self._selected_opt["banner"],
-				"outfile"       : output_file,
-				"path_config"   : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../conf"),
-				"path_script"   : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../scripts"),
-				"path_wordlist" : os.path.abspath(str(os.path.dirname(os.path.realpath(__file__)) ) + "/../wordlists")
-
-				}
-
-		ext = self.extensions.get_new(ext.name) # new instance fix for termination signal
-		out, pid = ext.task( ext_conf ) # get output and task pid
-		
-		# define title for logger and notebook's tabs
-		#if ext.name == "shell":
-		task_name = sub_item
-		#else:
-		#	task_name = ext.name
-
-		task_title = task_name
-		task_target = host_string
-
-		if ext.log:
-			
-			if port_string != "0":
-				task_target += ":"+port_string
-
-			id = self.logger.add_log(pid , task_title, task_target, ext.name)
-			ext.connect('end_task', self.end_task, id)
-			self.outfiles[id] = output_file 
-
-		try:
-			views = ext.read(out)
-			views.show()
-			try:
-				self.tasks[id] = { "views" : views, "ext" : ext }
-			except: pass
-			
-			# box label + close button for extension
-			box_label = Gtk.Box(spacing=6)
-			box_label.add( Gtk.Label(task_title) )
-			close_image = Gtk.Image.new_from_icon_name( "gtk-delete", Gtk.IconSize.MENU )
-			close_button = Gtk.Button()
-			close_button.set_relief(Gtk.ReliefStyle.NONE)
-			close_button.add(close_image)
-			box_label.add( close_button )
-
-			# close task window option
-			close_button.connect("clicked", self.close_task_tab, views)
-
-			if self.on_services_view:
-				self.services_view.notebook.append_page(views,box_label)
-				self.services_view.notebook.set_current_page(-1)
-			else:
-				self.work.notebook.append_page(views,box_label)
-				self.work.notebook.set_current_page(-1)
-
-			box_label.show_all()
-
-		except: pass
-
-		return True
 
 
 	def close_task_tab(self, btn, widget):

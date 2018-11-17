@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -39,7 +40,7 @@ class karma_ext(GObject.GObject):
 		GObject.GObject.__init__(self)
 
 		self.config = configparser.ConfigParser()
-		self.config.read(os.path.dirname(os.path.abspath(__file__)) + "/../../conf/metasploit.conf")
+		self.config.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/metasploit.conf")
 
 		self.modules = self._indicize()
 
@@ -58,27 +59,29 @@ class karma_ext(GObject.GObject):
 			"exploits": {}
 		}
 
-		for directory in final:
+		if os.path.exists(self.config["default"]["metasploit_path"]): # Fix #13
 
-			auxiliary = os.listdir( "%s/modules/%s/" % (self.config["default"]["metasploit_path"],directory) )
+			for directory in final:
 
-			for aux in auxiliary:
-				try: 
-					services = os.listdir( "%s/modules/%s/%s/" % (self.config["default"]["metasploit_path"], directory, aux) ) 
-				except: next
-					
-				final[directory][aux] = {}
-		
-				for service in services:
+				auxiliary = os.listdir( "%s/modules/%s/" % (self.config["default"]["metasploit_path"],directory) )
+
+				for aux in auxiliary:
 					try: 
-						msfmodules = os.listdir( "%s/modules/%s/%s/%s/" % (self.config["default"]["metasploit_path"], directory, aux, service) )
-				
-						final[directory][aux][service] = []
+						services = os.listdir( "%s/modules/%s/%s/" % (self.config["default"]["metasploit_path"], directory, aux) ) 
+					except: next
+						
+					final[directory][aux] = {}
+			
+					for service in services:
+						try: 
+							msfmodules = os.listdir( "%s/modules/%s/%s/%s/" % (self.config["default"]["metasploit_path"], directory, aux, service) )
+					
+							final[directory][aux][service] = []
 
-						for mod in msfmodules:
-							final[directory][aux][service].append(mod)
+							for mod in msfmodules:
+								final[directory][aux][service].append(mod)
 
-					except: pass
+						except: pass
 
 		return final
 

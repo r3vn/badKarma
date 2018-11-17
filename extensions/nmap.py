@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -23,9 +24,8 @@ import re
 
 class karma_ext():
 
-	def __init__(self, database):
+	def __init__(self):
 		self.name     = "nmap importer"
-		self.database = database
 	
 	def match(self, head_str):
 		""" match string in order to identify nmap xml report """
@@ -36,7 +36,7 @@ class karma_ext():
 		return False
 
 
-	def parse(self, xml):
+	def parse(self, xml, database):
 		""" import an nmap xml output """
 
 		report = NmapParser.parse_fromfile(xml)
@@ -61,9 +61,9 @@ class karma_ext():
 				hostname = ""
 
 			# check if the host is already in the db
-			if self.database.host_exist(host.address):
+			if database.host_exist(host.address):
 				# update
-				add_host = self.database.session.query(targets).filter( targets.address == host.address ).one()
+				add_host = database.session.query(targets).filter( targets.address == host.address ).one()
 				
 				# update values only if there's more informations
 				if len(str(host.scripts_results)) > 3:
@@ -101,16 +101,16 @@ class karma_ext():
 				add_host = targets(address=host.address,scripts=str(host.scripts_results), hostname=hostname, os_match=match, os_accuracy=accuracy, ipv4=host.ipv4, ipv6=host.ipv6, mac=host.mac, status=host.status, tcpsequence=host.tcpsequence, vendor=host.vendor, uptime=host.uptime, lastboot=host.lastboot, distance=host.distance)
 			
 			# commit to db
-			self.database.session.add(add_host)
-			self.database.session.commit()
+			database.session.add(add_host)
+			database.session.commit()
 
 			for port in host.get_ports():
 
 				service = host.get_service(port[0],port[1])
 
-				if self.database.port_exist(add_host.id, port[0], port[1]):
+				if database.port_exist(add_host.id, port[0], port[1]):
 					# update the existing port
-					add_port = self.database.session.query(services).filter( services.host_id == add_host.id, services.port == port[0], services.protocol == port[1] ).one()
+					add_port = database.session.query(services).filter( services.host_id == add_host.id, services.port == port[0], services.protocol == port[1] ).one()
 
 					if len(service.service) > 0:
 						add_port.service = service.service
@@ -131,6 +131,6 @@ class karma_ext():
 					add_port = services(port=port[0], protocol=port[1], service=service.service, fingerprint=service.servicefp, state=service.state, banner=service.banner, host = add_host)
 
 				# commit to db
-				self.database.session.add(add_port)
+				database.session.add(add_port)
 
-		self.database.session.commit()
+		database.session.commit()

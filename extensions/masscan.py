@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -23,9 +24,8 @@ import json
 
 class karma_ext():
 
-	def __init__(self, database):
+	def __init__(self):
 		self.name     = "masscan importer"
-		self.database = database
 	
 	def match(self, head_str):
 		""" match string in order to identify nmap xml report """
@@ -33,7 +33,7 @@ class karma_ext():
 			return True
 		return False
 
-	def parse(self, xml):
+	def parse(self, xml, database):
 		""" import masscan xml output """
 
 		dom = ElementTree.parse(xml)
@@ -67,9 +67,9 @@ class karma_ext():
 			if addr in out:
 				if service != "title" and service != "":
 
-					if self.database.port_exist(add_host.id, port, proto):
+					if database.port_exist(add_host.id, port, proto):
 						# update the existing port
-						add_port = self.database.session.query(services).filter( services.host_id == add_host.id, services.port == port, services.protocol == proto ).one()
+						add_port = database.session.query(services).filter( services.host_id == add_host.id, services.port == port, services.protocol == proto ).one()
 
 						if len(service) > 0:
 							add_port.service = service
@@ -86,26 +86,26 @@ class karma_ext():
 						add_port = services(port=port, protocol=proto, service=service, fingerprint=banner, state=port_state, banner="", host = out[addr])
 
 						# commit to db
-						self.database.session.add(add_port)
+						database.session.add(add_port)
 
 			else:
-				if self.database.host_exist(addr):
+				if database.host_exist(addr):
 
-					add_host = self.database.session.query(targets).filter( targets.address == addr ).one()
+					add_host = database.session.query(targets).filter( targets.address == addr ).one()
 
 				else:
 					# add the host to the db
 					add_host = targets(address=addr, status="up")
 					
 					# commit to db
-					self.database.session.add(add_host)
+					database.session.add(add_host)
 
 				out[addr] = add_host
 
-			self.database.session.commit()
+			database.session.commit()
 			
 
-	def parse_json(self, json_file):
+	def parse_json(self, json_file, database):
 		""" 
 		broken json importer, seems like python 3 json parser doesn't like
 		 masscan's json output for some reason :/
@@ -122,24 +122,24 @@ class karma_ext():
 
 		for line in masscan_out:
 
-			if self.database.host_exist(line["ip"]):
+			if database.host_exist(line["ip"]):
 
-				add_host = self.database.session.query(targets).filter( targets.address == line["ip"] ).one()
+				add_host = database.session.query(targets).filter( targets.address == line["ip"] ).one()
 
 			else:
 				# add the host to the db
 				add_host = targets(address=line["ip"], status="up")
 				
 				# commit to db
-				self.database.session.add(add_host)
+				database.session.add(add_host)
 
 				#out[addr] = add_host
 
 			for port in line["ports"]:
-				if self.port_exist(add_host.id, port["port"], port["proto"]):
+				if port_exist(add_host.id, port["port"], port["proto"]):
 
 					# update the existing port
-					add_port = self.database.session.query(services).filter( services.host_id == add_host.id, services.port == port["port"], services.protocol == port["proto"] ).one()
+					add_port = database.session.query(services).filter( services.host_id == add_host.id, services.port == port["port"], services.protocol == port["proto"] ).one()
 
 					try:
 						if len(port["status"]) > 0:
@@ -160,9 +160,9 @@ class karma_ext():
 					add_port = services(port=port["port"], protocol=port["proto"], service=port["service"]["name"], fingerprint=port["service"]["banner"], state=port["status"], banner="", host = line["ip"])
 
 					# commit to db
-					self.database.session.add(add_port)
+					database.session.add(add_port)
 
-				self.database.session.commit()
+				database.session.commit()
 
 
 

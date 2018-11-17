@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # badKarma - network reconnaissance toolkit
+# ( https://badkarma.xfiltrated.com )
 #
 # Copyright (C) 2018 <Giuseppe `r3vn` Corti>
 #
@@ -21,17 +22,16 @@ import json
 
 class karma_ext():
 
-	def __init__(self, database):
+	def __init__(self):
 		self.name     = "geoplugin importer"
-		self.database = database
-	
+			
 	def match(self, head_str):
 		""" match string in order to identify nmap xml report """
 		if "geoplugin_request" in head_str:
 			return True
 		return False
 
-	def parse(self, json_file):
+	def parse(self, json_file, database):
 		""" import host's longitude and latitude from geoplugin json """
 		file = open(json_file,'r')
 		sp_out = file.read()
@@ -40,9 +40,9 @@ class karma_ext():
 		geo_out = json.loads(sp_out)
 
 		# check if the host exists
-		if self.database.host_exist(geo_out["geoplugin_request"]):
+		if database.host_exist(geo_out["geoplugin_request"]):
 			# update
-			add_host = self.database.session.query(targets).filter( targets.address == geo_out["geoplugin_request"] ).one()
+			add_host = database.session.query(targets).filter( targets.address == geo_out["geoplugin_request"] ).one()
 				
 			# update values only if there's more informations
 			
@@ -51,6 +51,5 @@ class karma_ext():
 			add_host.country_code = geo_out["geoplugin_countryCode"]
 			add_host.country_name = geo_out["geoplugin_countryName"]
 
-			self.database.session.add(add_host)
-			self.database.session.commit()
-
+			database.session.add(add_host)
+			database.session.commit()
