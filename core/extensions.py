@@ -165,7 +165,6 @@ class karmaEngine(GObject.GObject):
 				if service_str == "http":
 					# Vhost test
 					if domain:
-						print("si")
 						rhost = domain # vhosts test
 			except: pass
 	

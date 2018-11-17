@@ -204,20 +204,21 @@ class host_informations(Gtk.ScrolledWindow):
 
 		hostnamestring = ""
 		
-		self.info_status.set_text(host.status)
 
-		self.info_hostnames.set_text(host.hostname)
+		self.info_status.set_text(str(host.status))
 
-		self.info_address.set_text(host.address)
+		self.info_hostnames.set_text(str(host.hostname))
+
+		self.info_address.set_text(str(host.address))
 
 		self.info_distance.set_text(str(host.distance)+" hops")
 
-		self.info_mac.set_text(host.mac)
+		self.info_mac.set_text(str(host.mac))
 
-		self.info_vendor.set_text(host.vendor)
+		self.info_vendor.set_text(str(host.vendor))
 
 		self.info_uptime.set_text(str(host.uptime) + " seconds")
-		self.info_tcpseq.set_text(host.tcpsequence)
+		self.info_tcpseq.set_text(str(host.tcpsequence))
 		
 		self.info_latitude.set_text(str(host.latitude))
 		
