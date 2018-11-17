@@ -433,7 +433,6 @@ class Handler():
 		elif response == Gtk.ResponseType.CANCEL:
 			dialog.close()
 			
-		self._sync()
 
 	def services_row(self, listbox, cell, listboxrow):
 		""" serviceslist service click event
@@ -546,8 +545,6 @@ class Handler():
 				address = serv.address
 				protocol = "tcp"
 				port = 0
-
-			print(service)
 
 			view, pid, id = self.engine.start_task(ext.name, sub_item, address, rport=port, proto=protocol, service_str=service, karmaconf={"autoexec":self.main.auto_exec.get_active(), "proxychains":self.main.use_proxychains.get_active()})
 			view.show()
