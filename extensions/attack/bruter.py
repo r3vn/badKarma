@@ -25,7 +25,6 @@ gi.require_version('Gtk', '3.0')
 
 from gi.repository import Gtk
 from gi.repository import Gdk
-from gi.repository import GtkSource
 
 from core import widgets, file_filters
 from core.extensions import base_ext

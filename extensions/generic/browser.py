@@ -1,11 +1,10 @@
 import os
 
 class karma_ext():
-	def __init__(self):
-		#self.url = url
-		self.name = "browser"
-		self.menu = {"service" : ["http"], "label" : "Open in Browser"}
-		self.log = False
+	
+	name = "browser"
+	menu = {"service" : ["http"], "label" : "Open in Browser"}
+	log = False
 
 	def task(self, config):
 		""" open an url with browser"""

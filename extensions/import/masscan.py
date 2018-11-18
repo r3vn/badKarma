@@ -24,8 +24,7 @@ import json
 
 class karma_ext():
 
-	def __init__(self):
-		self.name     = "masscan importer"
+	name     = "masscan importer"
 	
 	def match(self, head_str):
 		""" match string in order to identify nmap xml report """

@@ -59,7 +59,8 @@ class karmaEngine(GObject.GObject):
 				if filename in ["__init__.py","__pycache__"]:
 					continue # exclude python stuff
 
-				module_name = str(os.path.join(dirpath, filename).replace(".py","").replace(self.cwd+"/../extensions/","") )
+				#print(dirpath+"/"+filename)
+				module_name = str(os.path.join(dirpath, filename).replace(".py","").replace(self.cwd+"/../extensions/","") ).replace('/','.')
 				module      = importlib.import_module('extensions.'+module_name)
 					
 				module      = module.karma_ext()
