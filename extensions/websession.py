@@ -20,7 +20,6 @@
 
 import os
 import gi
-import configparser
 import random
 import string
 import subprocess
@@ -31,26 +30,16 @@ gi.require_version('Gtk', '3.0')
 
 from gi.repository import Gtk
 from gi.repository import Gdk
-from gi.repository import GObject
 
 from core import widgets
+from core.extensions import base_ext
 
-class karma_ext(GObject.GObject):
+class karma_ext(base_ext):
 
-	__gsignals__ = {
-		"end_task" : (GObject.SIGNAL_RUN_FIRST, None, (str,))
-	}
+	name = "websession"
+	log = True
+	menu = { "service" : ["http"], "label" : "Send to webSession" }
 
-	def __init__(self):
-		""" WebSession extension """
-		GObject.GObject.__init__(self)
-
-		self.config_file = configparser.ConfigParser()
-		self.config_file.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/websession.conf")
-
-		self.name = "web-session"
-		self.log = True
-		self.menu = { "service" : ["http"], "label" : "Send to webSession" }
 
 	def task(self, config):
 		""" WebSession task: a Gtk.Paned that contains mitmproxy and  """
@@ -65,6 +54,8 @@ class karma_ext(GObject.GObject):
 		path_config      = config["path_config"]
 		self.path_script = config["path_script"]
 		self.o_file      = "/tmp/"+''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8)) + ".mitm"
+
+		config_file = self.conf()
 
 		if domain:
 			target = domain.split()[0]
@@ -128,21 +119,19 @@ class karma_ext(GObject.GObject):
 		box.show_all()
 
 		# add main window
-		builder	 = Gtk.Builder() # glade
-		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/websession.glade")
-
+		builder	         = self.gui()
 		main_win         = builder.get_object('websession-main')
 		payloads_toolbar = builder.get_object('payloads-bar')
 		main_win.add(box)
 
 		
-		for payload_cat in self.config_file:
+		for payload_cat in config_file:
 			if payload_cat != "DEFAULT":
 				catbtn = Gtk.MenuItem(payload_cat)
 				catbtn.show()
 				subcat = Gtk.Menu()
 
-				for payload_subcat in self.config_file[payload_cat]:
+				for payload_subcat in config_file[payload_cat]:
 					
 
 					subcatbtn = Gtk.MenuItem(payload_subcat)
@@ -151,7 +140,7 @@ class karma_ext(GObject.GObject):
 
 					payload_menu = Gtk.Menu()
 
-					for payload in self.config_file[payload_cat][payload_subcat].split("\n"):
+					for payload in config_file[payload_cat][payload_subcat].split("\n"):
 						
 						payloadbtn = Gtk.MenuItem(payload)
 						payload_menu.add(payloadbtn)

@@ -58,7 +58,6 @@ class Handler():
 							} 
 
 		self.engine      = engine
-		self.database    = self.engine.database
 		self.ext_session = self.engine.extensions["importers"]
 
 		self.on_services_view = False
@@ -67,7 +66,7 @@ class Handler():
 		self.main = Main()
 
 		# set db location as window subtitle
-		self.main.headerbar.set_subtitle(self.database.db_loc)
+		self.main.headerbar.set_subtitle(self.engine.database.db_loc)
 
 		self.main.window.connect("delete-event", self.on_window_delete_event)
 
@@ -89,11 +88,11 @@ class Handler():
 		self.main.controller_notebook.connect('switch-page', self._controller_switch)
 
 		# generate the logger
-		self.logger = Logger(self.database)
+		self.logger = Logger(self.engine.database)
 
 		# generate the host list
-		self.services_list = Serviceslist(self.database)
-		self.host_list     = Hostlist(self.database)
+		self.services_list = Serviceslist(self.engine.database)
+		self.host_list     = Hostlist(self.engine.database)
 
 		# generate the services list
 		self.main.services_box.add(self.services_list.services_box)
@@ -135,18 +134,18 @@ class Handler():
 			# then return True
 
 			for host in self.scenes["hosts_view"]:
-				self.scenes["hosts_view"][host].refresh(self.database, history=True)
+				self.scenes["hosts_view"][host].refresh(self.engine.database, history=True)
 
 			return True 
 		
 		# refresh everithing
-		self.host_list.refresh(self.database)
-		self.services_list.refresh(self.database)
+		self.host_list.refresh(self.engine.database)
+		self.services_list.refresh(self.engine.database)
 
 		if reset:
 			# called at project switch
 			# otherwise will break current running task's log
-			self.logger.refresh(self.database)
+			self.logger.refresh(self.engine.database)
 
 			# add the welcome message
 			self.main.workspace.add(self.main.welcome_note)
@@ -163,14 +162,14 @@ class Handler():
 			except: pass
 
 		# set the db location as headerbar subtitle
-		self.main.headerbar.set_subtitle(self.database.db_loc)	
+		self.main.headerbar.set_subtitle(self.engine.database.db_loc)	
 
 		# refresh the hostviews and servicesview
 		for host in self.scenes["hosts_view"]:
-			self.scenes["hosts_view"][host].refresh(self.database)
+			self.scenes["hosts_view"][host].refresh(self.engine.database)
 
 		for service in self.scenes["services_view"]:
-			self.scenes["services_view"][service].refresh(self.database, view_out_scope = self.main.out_of_scope.get_active())
+			self.scenes["services_view"][service].refresh(self.engine.database, view_out_scope = self.main.out_of_scope.get_active())
 
 	def _clear_workspace(self):
 		""" 
@@ -246,7 +245,7 @@ class Handler():
 		""" add / remove host scope """
 
 		for host_obj in targets:
-			self.database.switch_scope(add, host_obj)
+			self.engine.database.switch_scope(add, host_obj)
 
 		self._sync()
 
@@ -306,7 +305,7 @@ class Handler():
 	def add_target(self, widget):
 		""" add one or multiple targets """
 		self.main.window.set_sensitive(False)
-		self.add_window = Targetadd(self.database)
+		self.add_window = Targetadd(self.engine.database)
 		self.add_window.cancel_button.connect("clicked", self._sensitive_true, False)
 		self.add_window.add_button.connect("clicked", self._sensitive_true, True)
 		self.add_window.window.connect("close", self._sensitive_true, False)
@@ -327,10 +326,6 @@ class Handler():
 			file_selected = dialog.get_filename()
 			try:
 				self.engine = karmaEngine(session_file=file_selected)
-				self.database = self.engine.database
-
-
-
 
 				# update the hostlist
 				self._clear_workspace()
@@ -363,7 +358,7 @@ class Handler():
 		if response == Gtk.ResponseType.OK:
 			file_selected = dialog.get_filename()
 			try:
-				shutil.copy(self.database.db_loc, file_selected)
+				shutil.copy(self.engine.database.db_loc, file_selected)
 			except: pass
 			
 		elif response == Gtk.ResponseType.CANCEL:
@@ -413,7 +408,7 @@ class Handler():
 
 			for host in hosts:
 
-				self.database.remove_host(host.id)
+				self.engine.database.remove_host(host.id)
 
 				if host == self.work.host:
 					# Remove host from the workspace
@@ -459,7 +454,7 @@ class Handler():
 				self._selected_opt["service"] = selected_service 
 
 			# generate the scene
-			self.services_view = Serviceview(selected_service, self.database, view_out_scope=self.main.out_of_scope.get_active())
+			self.services_view = Serviceview(selected_service, self.engine.database, view_out_scope=self.main.out_of_scope.get_active())
 			self.scenes["services_view"][str(cell)] = self.services_view
 
 		# add the scene
@@ -498,8 +493,8 @@ class Handler():
 
 			else: 
 				# generate the scene
-				db_host = self.database.get_host(host_id)
-				self.work = Hostview(db_host, self.database)
+				db_host = self.engine.database.get_host(host_id)
+				self.work = Hostview(db_host, self.engine.database)
 
 				# connect the history view to click event
 				self.work.history_view.connect("row-activated", self._history_activated)
@@ -600,7 +595,7 @@ class Handler():
 					domain = model.get_value(tree_iter,2) # selected host address
 					host_id = model.get_value(tree_iter,5)
 
-					host_obj = self.database.get_host(host_id)
+					host_obj = self.engine.database.get_host(host_id)
 
 					targets.append(host_obj)
 
@@ -756,7 +751,7 @@ class Handler():
 							# set shell conf section from user selection
 							self._selected_opt["service"] =  service
 
-							for port in self.database.get_ports_by_service(service):
+							for port in self.engine.database.get_ports_by_service(service):
 								targets.append(port)
 						else:
 							# set selected port
@@ -765,7 +760,7 @@ class Handler():
 
 							# set selected host if on service view
 							self._selected_opt["host"] =  model.get_value(tree_iter,4) 
-							targets.append(self.database.get_port(model.get_value(tree_iter,7) ))
+							targets.append(self.engine.database.get_port(model.get_value(tree_iter,7) ))
 
 					else:
 						# set selected port
@@ -774,7 +769,7 @@ class Handler():
 
 						# set selected service if not on service view
 						selected_service = model.get_value(tree_iter,4) # selected service
-						targets.append(self.database.get_port(model.get_value(tree_iter,7)))
+						targets.append(self.engine.database.get_port(model.get_value(tree_iter,7)))
 						self._selected_opt["service"] = selected_service 
 
 			except Exception as e:

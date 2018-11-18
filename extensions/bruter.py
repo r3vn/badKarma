@@ -20,30 +20,21 @@
 import os
 import gi
 import signal
-import configparser
 
 gi.require_version('Gtk', '3.0')
 
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GtkSource
-from gi.repository import GObject
 
 from core import widgets, file_filters
+from core.extensions import base_ext
 
-class karma_ext(GObject.GObject):
-	
-	__gsignals__ = {
-		"end_task" : (GObject.SIGNAL_RUN_FIRST, None, (str,))
-	}
+class karma_ext(base_ext):
 
-	def __init__(self):
-		""" bruter integrated extension """
-		GObject.GObject.__init__(self)
-
-		self.name = "bruter"
-		self.log = True
-		self.menu = { "service" : ["all"], "label" : "Send to Bruter" }
+	name = "bruter"
+	log = True
+	menu = { "service" : ["all"], "label" : "Send to Bruter" }
 
 	def get_log(self, output):
 		""" bruter read function, (parser could be implemented?)"""
@@ -75,12 +66,8 @@ class karma_ext(GObject.GObject):
 		path_wordlist = config["path_wordlist"]
 		path_script   = config["path_script"]
 
-		config_file = configparser.ConfigParser()
-		config_file.read(config["path_config"] + "/bruter.conf")
-
-
-		builder	 = Gtk.Builder() # glade
-		builder.add_from_file(os.path.dirname(os.path.abspath(__file__)) + "/../assets/ui/bruter.glade")
+		config_file = self.conf()
+		builder	 = self.gui()
 
 		self.running = False
 		self.bruter_box = builder.get_object("bruter-box")

@@ -26,28 +26,20 @@ gi.require_version('Gtk', '3.0')
 
 from gi.repository import Gtk
 from gi.repository.GdkPixbuf import Pixbuf
-from gi.repository import GObject
 from gi.repository import Gio
 from gi.repository import GLib
 
-class karma_ext(GObject.GObject):
+from core.extensions import base_ext
+
+class karma_ext(base_ext):
 	
-	__gsignals__ = {
-		"end_task" : (GObject.SIGNAL_RUN_FIRST, None, (str,))
-	}
-
-	def __init__(self):
-		""" screenshoter integrated extension """
-		GObject.GObject.__init__(self)
-		GObject.threads_init()
-
-		self.menu = { 
+	menu = { 
 					"service" : ["http","X11","ms-wbt-server", "vnc", "rtsp"],
 					"label"   : "Take Screenshot",
 				}
 
-		self.name = "screenshoter"
-		self.log = True
+	name = "screenshoter"
+	log = True
 
 	def task(self, config):
 		""" take the screenshot and return the base64 of the image """

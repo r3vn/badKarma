@@ -19,35 +19,23 @@
 
 import os
 import gi
-import configparser
 
 gi.require_version('Gtk', '3.0')
 
 from gi.repository import Gtk
 from gi.repository import Gdk
-from gi.repository import GObject
 
 from core import widgets
+from core.extensions import base_ext
 
-class karma_ext(GObject.GObject):
-
-	__gsignals__ = {
-		"end_task" : (GObject.SIGNAL_RUN_FIRST, None, (str,))
-	}
-
-	def __init__(self):
-		""" shell extension """
-		GObject.GObject.__init__(self)
-
-		self.config = configparser.ConfigParser()
-		self.config.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/shell.conf")
-
-		self.name = "shell"
-		self.log = True
-		self.menu = { "service" : ["all"], "label" : "shell" }
+class karma_ext(base_ext):
+	
+	name = "shell"
+	log = True
+	menu = { "service" : ["all"], "label" : "shell" }
 
 	def submenu(self, service):
-		return self.config[service]
+		return self.conf()[service]
 
 
 	def task(self, config):
@@ -63,7 +51,7 @@ class karma_ext(GObject.GObject):
 		path_config  = config["path_config"]
 		path_script  = config["path_script"]
 
-		cmd = self.config[serv][ext]
+		cmd = self.conf()[serv][ext]
 		cmd = cmd.replace("$rhost", rhost).replace("$rport", str(rport))
 		cmd = cmd.replace('$domain', config["domain"])
 		cmd = cmd.replace('$wordlists', config["path_wordlist"])

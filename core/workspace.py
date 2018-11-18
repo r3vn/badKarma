@@ -820,4 +820,4 @@ class Main():
 	def show_about(self,widget):
 
 		self.window.set_sensitive(False)
-		self.about_window.show_all()
+		self.about_window.show()

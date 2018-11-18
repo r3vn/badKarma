@@ -25,28 +25,15 @@ gi.require_version('Gtk', '3.0')
 
 from gi.repository import Gtk
 from gi.repository import Gdk
-from gi.repository import GObject
 
 from core import widgets
+from core.extensions import base_ext
 
-class karma_ext(GObject.GObject):
+class karma_ext(base_ext):
 
-	__gsignals__ = {
-		"end_task" : (GObject.SIGNAL_RUN_FIRST, None, (str,))
-	}
-
-	def __init__(self):
-		""" shell extension """
-		GObject.GObject.__init__(self)
-
-		self.config = configparser.ConfigParser()
-		self.config.read(os.path.dirname(os.path.abspath(__file__)) + "/../conf/metasploit.conf")
-
-		self.modules = self._indicize()
-
-		self.name = "metasploit"
-		self.log = True
-		self.menu = { "service" : ["all"], "label" : "metasploit" }
+	name = "metasploit"
+	log = True
+	menu = { "service" : ["all"], "label" : "metasploit" }
 
 	def _service_filter(self, service):
 
@@ -59,22 +46,24 @@ class karma_ext(GObject.GObject):
 			"exploits": {}
 		}
 
-		if os.path.exists(self.config["default"]["metasploit_path"]): # Fix #13
+		config_file = self.conf()
+
+		if os.path.exists(config_file["default"]["metasploit_path"]): # Fix #13
 
 			for directory in final:
 
-				auxiliary = os.listdir( "%s/modules/%s/" % (self.config["default"]["metasploit_path"],directory) )
+				auxiliary = os.listdir( "%s/modules/%s/" % (config_file["default"]["metasploit_path"],directory) )
 
 				for aux in auxiliary:
 					try: 
-						services = os.listdir( "%s/modules/%s/%s/" % (self.config["default"]["metasploit_path"], directory, aux) ) 
+						services = os.listdir( "%s/modules/%s/%s/" % (config_file["default"]["metasploit_path"], directory, aux) ) 
 					except: next
 						
 					final[directory][aux] = {}
 			
 					for service in services:
 						try: 
-							msfmodules = os.listdir( "%s/modules/%s/%s/%s/" % (self.config["default"]["metasploit_path"], directory, aux, service) )
+							msfmodules = os.listdir( "%s/modules/%s/%s/%s/" % (config_file["default"]["metasploit_path"], directory, aux, service) )
 					
 							final[directory][aux][service] = []
 
@@ -91,12 +80,13 @@ class karma_ext(GObject.GObject):
 			return False
 
 		menu = {}
+		msfmodules = self._indicize()
 
-		for cat in self.modules:
-			for typ in self.modules[cat]:
+		for cat in msfmodules:
+			for typ in msfmodules[cat]:
 				service = self._service_filter(service)
-				if service in self.modules[cat][typ]:
-					for mod in self.modules[cat][typ][service]:
+				if service in msfmodules[cat][typ]:
+					for mod in msfmodules[cat][typ][service]:
 						menu[ cat+"/"+typ+"/"+mod.replace('.rb','').replace('_',' ') ] = ''
 
 		return menu

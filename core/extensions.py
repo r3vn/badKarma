@@ -21,7 +21,12 @@ import os
 import importlib
 import random
 import string
+import configparser
+import gi
 
+gi.require_version('Gtk', '3.0')
+
+from gi.repository import Gtk
 from gi.repository import GObject
 
 from core.database import DB
@@ -220,3 +225,45 @@ class karmaEngine(GObject.GObject):
 			self.id += 1
 
 		return ext.read(out), pid, self.id-1
+
+
+class base_ext(GObject.GObject):
+	""" 
+	base extension template, includes: end_task signal, 
+	config and assets engine.
+	"""
+	
+	__gsignals__ = {
+		"end_task" : (GObject.SIGNAL_RUN_FIRST, None, (str,))
+	}
+
+	def __init__(self):
+		
+		GObject.GObject.__init__(self)
+
+
+	def conf(self):
+		""" get an extension's config file """
+		try:
+
+			config_file = configparser.ConfigParser()
+			config_file.read( "%s/../conf/%s.conf" % (os.path.dirname(os.path.abspath(__file__)), self.name) )
+
+			return config_file
+
+		except:
+
+			return False
+
+	def gui(self):
+		""" get an extension's builder object """
+		try:
+
+			builder	 = Gtk.Builder() # glade
+			builder.add_from_file( "%s/../assets/ui/%s.glade" % (os.path.dirname(os.path.abspath(__file__)), self.name) )
+
+			return builder
+
+		except:
+
+			return False
