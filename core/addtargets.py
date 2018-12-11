@@ -44,7 +44,10 @@ class Targetadd():
 		self.nmap_scan_box = builder.get_object("nmap-scan-box")
 
 		nmap_store = Gtk.ListStore(str)
-		scan_types = ["nmap/default","nmap/intense scan","nmap/intense scan all tcp","nmap/intense scan no ping","masscan/full tcp", "get from shodan"]
+		scan_types = ["scan/nmap/default","scan/nmap/ping scan", "scan/nmap/connect scan", "scan/nmap/SYN scan", "scan/nmap/ACK scan", "scan/nmap/UDP scan",
+				"scan/nmap/advanced/quick scan", "scan/nmap/advanced/intense scan", "scan/nmap/advanced/intense scan + udp ", "scan/nmap/advanced/intense scan all tcp",
+				"scan/nmap/advanced/intense scan no-ping", "scan/nmap/advanced/slow comprehensive scan", 
+				"scan/masscan/full tcp", "get from shodan"]
 
 		for scan in scan_types:
 			nmap_store.append([scan])
