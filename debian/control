@@ -1,0 +1,37 @@
+Source: badkarma
+Section: net
+Priority: optional
+Maintainer: Eugenio Paolantonio (g7) <me@medesimo.eu>
+Build-Depends: python3-all-dev (>= 3.2), debhelper (>= 8.0.0)
+X-Python3-Version: >= 3.4
+Standards-Version: 4.0.1
+Homepage: http://github.com/r3vn/badKarma
+Vcs-Git: git://github.com/r3vn/badKarma.git
+Vcs-Browser: https://github.com/r3vn/badKarma
+
+Package: badkarma
+Architecture: all
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         python3 (>= 3.4),
+         python3-libnmap,
+         python3-sqlalchemy,
+         python3-shodan,
+         python3-gi,
+         gir1.2-gtk-3.0,
+         gir1.2-gtk-vnc-2.0,
+         gir1.2-gtksource-3.0,
+         gir1.2-vte-2.91,
+         gir1.2-osmgpsmap-1.0,
+         gir1.2-webkit2-4.0,
+         phantomjs,
+         mitmproxy,
+         ffmpeg
+Description: Advanced network reconnaissance toolkit
+ badKarma is a python3 GTK+ toolkit that aims to assist penetration
+ testers during all the network infrastructure penetration testing
+ activity phases.
+ .
+ It allows testers to save time by having point-and-click access to
+ their toolkits, launch them against single or multiple targets and
+ interact with them through semplified GUIs or Terminals.
